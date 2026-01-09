@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { usePosStore } from './store/usePosStore';
+import { useReactToPrint } from 'react-to-print';
 
 // --- COMPONENTES ---
 import { BotonProducto } from './components/BotonProducto';
@@ -9,7 +10,8 @@ import { ModalInventario } from './components/ModalInventario';
 import { ModalCorte } from './components/ModalCorte';
 import { ModalGranel } from './components/ModalGranel'; // <--- ¡ESTA FALTABA SEGURO!
 import { EscanerCamara } from './components/EscanerCamara'; // <--- IMPORTAR
-
+import { Sincronizador } from './components/Sincronizador'; // <--- IMPORTAR
+import { TicketImprimible } from './components/TicketImprimible';
 // --- ICONOS ---
 import { Settings, Store, Search, X, ScanBarcode } from 'lucide-react';
 
@@ -54,10 +56,30 @@ function App() {
     }
   };
 
-  const manejarCobro = () => {
-    registrarVenta(0);
+  // Crear la referencia para el ticket
+  const ticketRef = useRef();
+
+  // Configurar la función de impresión
+  const handlePrint = useReactToPrint({
+    contentRef: ticketRef, // Nueva sintaxis de react-to-print
+    documentTitle: 'Ticket Venta',
+    onAfterPrint: () => alert("¡Impresión finalizada!") // Opcional
+  });
+
+  const manejarCobro = async (pagoCliente) => {
+    // 1. Registramos la venta en Firebase/Local
+    await registrarVenta(pagoCliente);
+
+    // 2. Cerramos el modal de pago
     setMostrarPago(false);
-    alert('¡Venta cobrada con éxito!');
+
+    // 3. ¡IMPRIMIMOS! (Opcional: Preguntar antes)
+    if (confirm("¿Imprimir ticket?")) {
+      // Pequeño delay para asegurar que los datos de la "última venta" estén listos
+      setTimeout(() => {
+        handlePrint();
+      }, 500);
+    }
   };
 
   // --- SELECCIÓN INTELIGENTE DE PRODUCTO ---
@@ -84,6 +106,8 @@ function App() {
 
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-facilito-fondo overflow-hidden">
+      {/* ACTIVAMOS EL SINCRONIZADOR AQUÍ */}
+      <Sincronizador />
 
       {/* SECCIÓN IZQUIERDA */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -192,13 +216,20 @@ function App() {
             }}
           />
         )}
+        <div style={{ display: 'none' }}> {/* Oculto en pantalla */}
+          <div id="ticket-print"> {/* Visible al imprimir */}
+            <TicketImprimible
+              ref={ticketRef}
+              venta={ventas[0]}
+            />
+          </div>
+        </div>
 
       </div>
 
       <div className="h-[40%] lg:h-full w-full lg:w-[450px] shadow-2xl z-10 shrink-0 border-l border-gray-300">
         <TicketVenta alPresionarCobrar={() => setMostrarPago(true)} />
       </div>
-
     </div>
   );
 }

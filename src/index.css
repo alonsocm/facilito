@@ -21,3 +21,10 @@ button {
 button:active {
   transform: scale(0.95); /* Efecto visual de "presionado" */
 }
+
+@media print {
+  @page {
+    margin: 0; /* Quita los márgenes del navegador */
+    size: auto;
+  } 
+}

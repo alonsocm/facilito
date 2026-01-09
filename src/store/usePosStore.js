@@ -1,156 +1,156 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+// Nota: Quitamos 'persist' porque ahora la persistencia es la Nube.
+import { db } from '../firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
 
-export const usePosStore = create(
-    persist(
-        (set, get) => ({
+export const usePosStore = create((set, get) => ({
 
-            // 1. PRODUCTOS CON STOCK INICIAL (NUEVO CAMPO 'stock')
-            productos: [
-                { id: 1, nombre: 'Coca-Cola 600ml', precio: 19.00, costo: 14.50, codigo: '7501055300075', esGranel: false, stock: 24, categoria: 'Bebidas' },
-                { id: 4, nombre: 'Huevo Blanco Kg', precio: 58.00, costo: 42.00, codigoCorto: '10', esGranel: true, stock: 15.5, categoria: 'Canasta' }, // Stock decimal para granel
-                { id: 9, nombre: 'Jamón Virginia Kg', precio: 140.00, costo: 90.00, codigoCorto: '50', esGranel: true, stock: 5.200, categoria: 'Salchichonería' },
-                { id: 10, nombre: 'Queso Panela Kg', precio: 120.00, costo: 80.00, codigoCorto: '60', esGranel: true, stock: 3.000, categoria: 'Lácteos' },
-                // ... puedes agregar más productos con stock aquí
-            ],
+    productos: [],
+    ventas: [],
+    carrito: [],
 
-            carrito: [],
-            ventas: [],
+    // --- CARGA DE DATOS (Sincronización) ---
+    // Esta función la llamaremos desde un componente "Escucha"
+    fijarProductos: (nuevosProductos) => set({ productos: nuevosProductos }),
+    fijarVentas: (nuevasVentas) => set({ ventas: nuevasVentas }),
 
-            // --- ACCIONES ---
+    // --- ACCIONES DE CARRITO (LOCALES) ---
+    // El carrito sigue siendo local, no necesitamos subirlo a la nube hasta vender
+    agregarProducto: (producto, cantidad = 1) => {
+        const { carrito, productos } = get();
+        const productoEnAlmacen = productos.find(p => p.id === producto.id);
+        const stockDisponible = productoEnAlmacen ? productoEnAlmacen.stock : 0;
+        const itemEnCarrito = carrito.find((item) => item.id === producto.id);
+        const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-            // 2. AGREGAR CON VALIDACIÓN DE STOCK (MODIFICADO)
-            agregarProducto: (producto, cantidad = 1) => {
-                const { carrito, productos } = get();
+        if (cantidadEnCarrito + cantidad > stockDisponible) {
+            alert(`¡Stock insuficiente! Quedan ${stockDisponible}`);
+            return;
+        }
 
-                // Buscamos el stock real actual del producto
-                const productoEnAlmacen = productos.find(p => p.id === producto.id);
-                const stockDisponible = productoEnAlmacen ? productoEnAlmacen.stock : 0;
+        if (itemEnCarrito) {
+            set({
+                carrito: carrito.map((item) => item.id === producto.id ? { ...item, cantidad: item.cantidad + cantidad } : item),
+            });
+        } else {
+            set({ carrito: [...carrito, { ...producto, cantidad: cantidad }] });
+        }
+    },
 
-                // Buscamos si ya tenemos algo en el carrito
-                const itemEnCarrito = carrito.find((item) => item.id === producto.id);
-                const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
+    eliminarProducto: (id) => {
+        const { carrito } = get();
+        set({ carrito: carrito.filter((item) => item.id !== id) });
+    },
 
-                // VERIFICACIÓN: ¿Alcanza el stock?
-                if (cantidadEnCarrito + cantidad > stockDisponible) {
-                    alert(`¡No hay suficiente stock! Solo quedan ${stockDisponible}`);
-                    return; // Detenemos la función, no agrega nada
+    limpiarCarrito: () => set({ carrito: [] }),
+
+    obtenerTotal: () => {
+        const { carrito } = get();
+        return carrito.reduce((total, item) => total + (item.precio * item.cantidad), 0);
+    },
+
+    // --- ACCIONES QUE ESCRIBEN EN FIREBASE ---
+
+    // 1. REGISTRAR VENTA
+    registrarVenta: async (pagoCliente) => {
+        const { carrito, obtenerTotal, productos } = get();
+        const total = obtenerTotal();
+
+        // A. Crear objeto venta
+        const nuevaVenta = {
+            id: Date.now().toString(), // ID temporal
+            hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+            fecha: new Date().toLocaleDateString('es-MX'), // Agregamos fecha para reportes futuros
+            timestamp: new Date(), // Para ordenar cronológicamente
+            total: total,
+            pago: pagoCliente,
+            cambio: pagoCliente - total,
+            articulos: carrito.length,
+            detalle: carrito // Guardamos qué se vendió
+        };
+
+        try {
+            // B. Subir Venta a Firebase
+            // Usamos el ID como nombre del documento para evitar duplicados
+            await setDoc(doc(db, "ventas", nuevaVenta.id), nuevaVenta);
+
+            // C. Restar Inventario en Firebase (Uno por uno)
+            carrito.forEach(async (item) => {
+                const productoRef = doc(db, "productos", item.id.toString());
+                // Buscamos el producto original para tener el stock exacto
+                const productoOriginal = productos.find(p => p.id === item.id);
+                if (productoOriginal) {
+                    const nuevoStock = parseFloat((productoOriginal.stock - item.cantidad).toFixed(3));
+                    await updateDoc(productoRef, { stock: nuevoStock });
                 }
+            });
 
-                // Si pasa la validación, agregamos normal
-                if (itemEnCarrito) {
-                    set({
-                        carrito: carrito.map((item) =>
-                            item.id === producto.id
-                                ? { ...item, cantidad: item.cantidad + cantidad }
-                                : item
-                        ),
-                    });
-                } else {
-                    set({ carrito: [...carrito, { ...producto, cantidad: cantidad }] });
-                }
-            },
+            // D. Limpiar carrito local
+            set({ carrito: [] });
 
-            eliminarProducto: (id) => {
-                const { carrito } = get();
-                set({ carrito: carrito.filter((item) => item.id !== id) });
-            },
+        } catch (error) {
+            console.error("Error al registrar venta:", error);
+            alert("Hubo un error al guardar la venta en la nube.");
+        }
+    },
 
-            limpiarCarrito: () => set({ carrito: [] }),
-            borrarHistorialDia: () => set({ ventas: [] }),
+    // 2. CREAR PRODUCTO
+    crearProducto: async (nuevoProducto) => {
+        const idUnico = Date.now().toString(); // Usamos timestamp como ID string
+        const productoFinal = {
+            ...nuevoProducto,
+            id: idUnico,
+            precio: parseFloat(nuevoProducto.precio),
+            costo: parseFloat(nuevoProducto.costo),
+            stock: parseFloat(nuevoProducto.stock || 0)
+        };
 
-            obtenerTotal: () => {
-                const { carrito } = get();
-                return carrito.reduce((total, item) => total + (item.precio * item.cantidad), 0);
-            },
+        try {
+            await setDoc(doc(db, "productos", idUnico), productoFinal);
+        } catch (error) {
+            console.error("Error creando producto:", error);
+        }
+    },
 
-            // 3. REGISTRAR VENTA Y RESTAR INVENTARIO (MODIFICADO)
-            registrarVenta: (pagoCliente) => {
-                const { carrito, obtenerTotal, ventas, productos } = get();
-                const total = obtenerTotal();
+    // 3. ACTUALIZAR PRODUCTO
+    actualizarProducto: async (id, datosActualizados) => {
+        try {
+            const productoRef = doc(db, "productos", id.toString());
+            await updateDoc(productoRef, {
+                ...datosActualizados,
+                precio: parseFloat(datosActualizados.precio),
+                costo: parseFloat(datosActualizados.costo),
+                stock: parseFloat(datosActualizados.stock)
+            });
+        } catch (error) {
+            console.error("Error actualizando:", error);
+        }
+    },
 
-                // A. Restamos del inventario (Stock)
-                const productosActualizados = productos.map(producto => {
-                    const itemVendido = carrito.find(c => c.id === producto.id);
-                    if (itemVendido) {
-                        return {
-                            ...producto,
-                            stock: parseFloat((producto.stock - itemVendido.cantidad).toFixed(3)) // Restamos y cuidamos decimales
-                        };
-                    }
-                    return producto;
-                });
+    // 4. BORRAR PRODUCTO
+    borrarDelCatalogo: async (id) => {
+        try {
+            await deleteDoc(doc(db, "productos", id.toString()));
+        } catch (error) {
+            console.error("Error borrando:", error);
+        }
+    },
 
-                // B. Guardamos la venta en el historial
-                const nuevaVenta = {
-                    id: Date.now(),
-                    hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-                    total: total,
-                    pago: pagoCliente,
-                    cambio: pagoCliente - total,
-                    articulos: carrito.length
-                };
+    // --- BÚSQUEDA (IGUAL QUE ANTES) ---
+    buscarYAgregar: (termino) => {
+        const { productos, agregarProducto } = get();
+        const terminoLimpio = termino.trim().toLowerCase();
+        if (!terminoLimpio) return false;
 
-                set({
-                    productos: productosActualizados, // Guardamos el nuevo stock reducido
-                    ventas: [nuevaVenta, ...ventas],
-                    carrito: []
-                });
-            },
+        const coincidenciaExacta = productos.find(p =>
+            (p.codigo && p.codigo === terminoLimpio) ||
+            (p.codigoCorto && p.codigoCorto === terminoLimpio)
+        );
 
-            // --- BÚSQUEDA ---
-            buscarYAgregar: (termino) => {
-                const { productos, agregarProducto } = get();
-                const terminoLimpio = termino.trim().toLowerCase();
-                if (!terminoLimpio) return false;
-
-                const coincidenciaExacta = productos.find(p =>
-                    p.codigo === terminoLimpio || p.codigoCorto === terminoLimpio
-                );
-
-                if (coincidenciaExacta) {
-                    agregarProducto(coincidenciaExacta, 1);
-                    return true;
-                }
-                return false;
-            },
-
-            // --- INVENTARIO ---
-            crearProducto: (nuevoProducto) => {
-                const { productos } = get();
-                const productoConId = {
-                    ...nuevoProducto,
-                    id: Date.now(),
-                    precio: parseFloat(nuevoProducto.precio),
-                    costo: parseFloat(nuevoProducto.costo),
-                    stock: parseFloat(nuevoProducto.stock || 0) // Guardamos stock inicial
-                };
-                set({ productos: [...productos, productoConId] });
-            },
-
-            borrarDelCatalogo: (id) => {
-                const { productos } = get();
-                set({ productos: productos.filter(p => p.id !== id) });
-            },
-
-            // ACTUALIZAR (¡NUEVO!) <--- ESTO ES LO QUE NECESITAMOS
-            actualizarProducto: (id, datosActualizados) => {
-                const { productos } = get();
-                set({
-                    productos: productos.map(p =>
-                        p.id === id
-                            ? {
-                                ...p, ...datosActualizados, // Mantenemos ID, sobrescribimos lo demás
-                                precio: parseFloat(datosActualizados.precio),
-                                costo: parseFloat(datosActualizados.costo),
-                                stock: parseFloat(datosActualizados.stock)
-                            }
-                            : p
-                    )
-                });
-            },
-
-        }),
-        { name: 'facilito-storage' }
-    )
-);
+        if (coincidenciaExacta) {
+            agregarProducto(coincidenciaExacta, 1);
+            return true;
+        }
+        return false;
+    }
+}));

@@ -10,8 +10,6 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
 
     // --- LÓGICA DE PRESIÓN ---
     const iniciarPresion = () => {
-        // 1. SI ES A GRANEL, NO ACTIVAMOS EL LONG PRESS
-        // Simplemente no hacemos nada aquí, dejamos que el click normal actúe al soltar.
         if (producto.esGranel) return;
 
         setPresionando(true);
@@ -21,14 +19,18 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
         }, 500);
     };
 
-    const terminarPresion = () => {
-        // 2. SI ES A GRANEL, SIEMPRE ES UN CLICK NORMAL
+    const terminarPresion = (e) => {
+        // 🛑 SOLUCIÓN AL BUG: Si es un evento táctil, detenemos el comportamiento
+        // por defecto para que el navegador no lance un "MouseUp" fantasma después.
+        if (e && e.type === 'touchend') {
+            e.preventDefault();
+        }
+
         if (producto.esGranel) {
-            alHacerClick(1); // Esto abrirá el ModalGranel en App.jsx
+            alHacerClick(1);
             return;
         }
 
-        // Lógica normal para productos estándar
         if (timerRef.current && !mostrarInputCantidad) {
             clearTimeout(timerRef.current);
             alHacerClick(1);
@@ -40,13 +42,13 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
         if (timerRef.current) clearTimeout(timerRef.current);
         setPresionando(false);
     };
-    // -------------------------
 
     const confirmarCantidad = () => {
         if (cantidadManual > 0) alHacerClick(parseInt(cantidadManual));
         setMostrarInputCantidad(false);
         setCantidadManual(1);
     };
+    // -------------------------
 
     return (
         <>
@@ -54,16 +56,25 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
                 onMouseDown={iniciarPresion}
                 onMouseUp={terminarPresion}
                 onMouseLeave={cancelarPresion}
+
+                // Eventos Táctiles (Móvil)
                 onTouchStart={iniciarPresion}
                 onTouchEnd={terminarPresion}
+                onTouchMove={cancelarPresion} // Si arrastran el dedo (scroll), cancelamos
+                onTouchCancel={cancelarPresion} // Si entra una llamada o alerta, cancelamos
+
+                // Deshabilitamos el menú contextual (click derecho) en el botón para evitar conflictos en móvil
+                onContextMenu={(e) => e.preventDefault()}
 
                 className={`
                 relative bg-white p-3 sm:p-4 rounded-2xl shadow-sm border-2 transition-all duration-200
                 flex flex-col items-start justify-between h-full group overflow-hidden select-none w-full
                 ${presionando ? 'scale-95 border-facilito-azul bg-blue-50' : 'border-transparent hover:border-blue-200 hover:shadow-md'}
+                active:scale-95 touch-manipulation cursor-pointer
             `}
+                style={{ WebkitTapHighlightColor: 'transparent' }} // Quita el parpadeo azul en Android/iOS
             >
-                <div className="w-full flex flex-col gap-2 sm:gap-3">
+                <div className="w-full flex flex-col gap-2 sm:gap-3 pointer-events-none"> {/* pointer-events-none ayuda a que el click sea en el botón padre */}
                     <div className="w-full aspect-square rounded-xl bg-gray-50 overflow-hidden relative">
                         {producto.imagen ? (
                             <img src={producto.imagen} alt={producto.nombre} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
@@ -73,7 +84,6 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
                             </div>
                         )}
 
-                        {/* ETIQUETA VISUAL PARA GRANEL */}
                         {producto.esGranel && (
                             <span className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
                                 KG / $
@@ -86,17 +96,15 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
                     </p>
                 </div>
 
-                <p className="text-facilito-verde font-black text-lg sm:text-xl text-left mt-2 w-full">
+                <p className="text-facilito-verde font-black text-lg sm:text-xl text-left mt-2 w-full pointer-events-none">
                     ${producto.precio}
                 </p>
 
-                {/* Icono flotante: Plus para normales, Balanza/Grid para Granel (Opcional) */}
                 <div className="absolute bottom-3 right-3 bg-blue-100 text-facilito-azul p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity scale-0 group-hover:scale-100 duration-200">
                     <Plus size={18} />
                 </div>
             </button>
 
-            {/* --- MODAL (Solo se muestra si NO es granel) --- */}
             {mostrarInputCantidad && (
                 <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                     <div className="bg-white p-6 rounded-3xl shadow-2xl w-72 flex flex-col items-center animate-slide-up">

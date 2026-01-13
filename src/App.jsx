@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { usePosStore } from './store/usePosStore';
 import { Sincronizador } from './components/Sincronizador';
 import { useReactToPrint } from 'react-to-print';
+import { Toaster, toast } from 'react-hot-toast';
 
 // --- COMPONENTES ---
 import { BotonProducto } from './components/BotonProducto';
@@ -63,30 +64,59 @@ function App() {
     }
   };
 
+  // En src/App.jsx, busca la función manejarCobro y actualízala:
+
   const manejarCobro = async (pagoCliente) => {
-    // 1. Guardamos el resultado (true o false)
     const exito = await registrarVenta(pagoCliente);
 
-    // 2. SI FALLÓ, NOS DETENEMOS AQUÍ.
-    // El usuario verá la alerta de error y el modal seguirá abierto para que intente de nuevo.
     if (!exito) return;
 
-    // 3. SI TUVO ÉXITO, CONTINUAMOS...
     setMostrarPago(false);
     setTicketMovilAbierto(false);
 
-    if (confirm("¿Imprimir ticket?")) {
-      setTimeout(() => handlePrint(), 500);
-    }
+    // --- NUEVO: PREGUNTA ELEGANTE PARA IMPRIMIR ---
+    toast((t) => (
+      <div className="flex flex-col gap-2 items-center">
+        <span className="font-bold text-gray-700">¿Deseas imprimir el ticket?</span>
+        <div className="flex gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            No
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              handlePrint();
+            }}
+            className="px-4 py-1 text-sm font-bold bg-facilito-azul text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors flex items-center gap-1"
+          >
+            🖨️ Imprimir
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 6000, // Le damos 6 segundos para decidir
+      style: {
+        border: '1px solid #e5e7eb',
+        padding: '16px',
+        borderRadius: '16px',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+      },
+    });
   };
 
-  const manejarSeleccionProducto = (producto) => {
+  const manejarSeleccionProducto = (producto, cantidad = 1) => { // <--- ACEPTAR CANTIDAD
     if (producto.esGranel) {
       setProductoAGranel(producto);
     } else {
-      agregarProducto(producto, 1);
+      agregarProducto(producto, cantidad); // <--- USAR LA CANTIDAD QUE RECIBIMOS
       setBusqueda('');
       inputBusquedaRef.current?.focus();
+
+      // Opcional: Feedback visual extra
+      // toast.success(`Agregados ${cantidad} de ${producto.nombre}`);
     }
   };
 
@@ -197,7 +227,7 @@ function App() {
                 <BotonProducto
                   key={producto.id}
                   producto={producto}
-                  alHacerClick={() => manejarSeleccionProducto(producto)}
+                  alHacerClick={(cantidad) => manejarSeleccionProducto(producto, cantidad)} // <--- Pasamos la cantidad
                 />
               ))}
             </div>
@@ -280,7 +310,11 @@ function App() {
             const encontrado = buscarYAgregar(codigo);
             if (!encontrado) {
               setBusqueda(codigo);
-              alert('Producto no encontrado');
+              toast.error('Producto no encontrado en catálogo');
+            }
+            else {
+              // Opcional: Sonido o aviso de éxito
+              toast.success('Producto agregado');
             }
           }}
         />
@@ -290,6 +324,20 @@ function App() {
       <div style={{ display: 'none' }}>
         <TicketImprimible ref={ticketRef} venta={ventas[0]} />
       </div>
+      {/* --- AQUÍ VA LA TOSTADORA --- */}
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          style: {
+            fontSize: '14px',
+            fontWeight: 'bold',
+            borderRadius: '10px',
+            padding: '16px',
+            color: '#333',
+          },
+        }}
+      />
 
     </div>
   );

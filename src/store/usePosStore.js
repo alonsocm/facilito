@@ -1,3 +1,4 @@
+import { toast } from 'react-hot-toast';
 import { create } from 'zustand';
 // CORRECCIÓN 1: Asegúrate de apuntar al archivo correcto (usualmente es /config)
 import { db } from '../firebase';
@@ -46,7 +47,10 @@ export const usePosStore = create((set, get) => ({
 
         // Validación simple de stock (puedes comentarla si quieres vender en negativo)
         if (cantidadEnCarrito + cantidad > stockDisponible) {
-            alert(`¡Stock insuficiente! Quedan ${stockDisponible}`);
+            toast.error(`¡Ups! Solo quedan ${stockDisponible} unidades`, {
+                icon: '📦',
+                style: { border: '2px solid #ef4444' } // Borde rojo
+            });
             return;
         }
 
@@ -124,12 +128,18 @@ export const usePosStore = create((set, get) => ({
                 ventas: [...get().ventas, { id: nuevaVentaRef.id, ...datosVenta }],
                 productos: productosActualizados
             });
-
+            // AGREGAR ESTO:
+            toast.success('¡Venta registrada con éxito!', {
+                icon: '💰',
+                style: { border: '2px solid #22c55e' } // Borde verde
+            });
             return true; // ÉXITO: Esto cierra el modal
 
         } catch (error) {
             console.error("Error crítico al registrar venta:", error);
-            alert("Error al guardar: " + error.message);
+            toast.error("No se pudo guardar la venta. Intenta de nuevo.", {
+                duration: 4000
+            });
             return false; // FALLO: Esto mantiene el modal abierto
         }
     },

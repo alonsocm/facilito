@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Package, Save, Edit2, RotateCcw, ScanBarcode, Scale } from 'lucide-react'; // Agregamos Scale (Báscula)
 import { usePosStore } from '../store/usePosStore';
 import { EscanerCamara } from './EscanerCamara';
+import { toast } from 'react-hot-toast';
 
 export const ModalInventario = ({ cerrarModal }) => {
     const { productos, crearProducto, borrarDelCatalogo, actualizarProducto } = usePosStore();
@@ -59,11 +60,11 @@ export const ModalInventario = ({ cerrarModal }) => {
 
         if (productoAEditar) {
             actualizarProducto(productoAEditar.id, datos);
-            alert('¡Producto actualizado!');
+            toast.success('¡Producto actualizado!');
             limpiarFormulario();
         } else {
             crearProducto(datos);
-            alert('¡Producto creado!');
+            toast.success('¡Producto creado!');
             limpiarFormulario();
         }
     };

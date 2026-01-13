@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Package, Save, Edit2, RotateCcw, ScanBarcode } from 'lucide-react'; // <--- Agregamos ScanBarcode
+import { X, Plus, Trash2, Package, Save, Edit2, RotateCcw, ScanBarcode, Scale } from 'lucide-react'; // Agregamos Scale (Báscula)
 import { usePosStore } from '../store/usePosStore';
-import { EscanerCamara } from './EscanerCamara'; // <--- Importamos el Escáner
+import { EscanerCamara } from './EscanerCamara';
 
 export const ModalInventario = ({ cerrarModal }) => {
     const { productos, crearProducto, borrarDelCatalogo, actualizarProducto } = usePosStore();
 
-    // Estado para saber si estamos editando
     const [productoAEditar, setProductoAEditar] = useState(null);
-
-    // Estado para mostrar/ocultar el escáner
-    const [mostrarScanner, setMostrarScanner] = useState(false); // <--- NUEVO
+    const [mostrarScanner, setMostrarScanner] = useState(false);
 
     // Estados del formulario
     const [nombre, setNombre] = useState('');
@@ -19,8 +16,8 @@ export const ModalInventario = ({ cerrarModal }) => {
     const [stock, setStock] = useState('');
     const [categoria, setCategoria] = useState('');
     const [codigo, setCodigo] = useState('');
+    const [esGranel, setEsGranel] = useState(false); // <--- NUEVO ESTADO
 
-    // Efecto: Llenar formulario si editamos
     useEffect(() => {
         if (productoAEditar) {
             setNombre(productoAEditar.nombre);
@@ -29,6 +26,7 @@ export const ModalInventario = ({ cerrarModal }) => {
             setStock(productoAEditar.stock);
             setCategoria(productoAEditar.categoria);
             setCodigo(productoAEditar.codigo || '');
+            setEsGranel(productoAEditar.esGranel || false); // <--- CARGAMOS EL VALOR
         } else {
             limpiarFormulario();
         }
@@ -41,6 +39,7 @@ export const ModalInventario = ({ cerrarModal }) => {
         setStock('');
         setCategoria('');
         setCodigo('');
+        setEsGranel(false); // <--- RESETEAMOS
         setProductoAEditar(null);
     };
 
@@ -55,16 +54,16 @@ export const ModalInventario = ({ cerrarModal }) => {
             stock: stock || 0,
             categoria: categoria || 'General',
             codigo,
-            esGranel: productoAEditar ? productoAEditar.esGranel : false
+            esGranel // <--- GUARDAMOS EL VALOR
         };
 
         if (productoAEditar) {
             actualizarProducto(productoAEditar.id, datos);
-            alert('¡Producto actualizado correctamente!');
+            alert('¡Producto actualizado!');
             limpiarFormulario();
         } else {
             crearProducto(datos);
-            alert('¡Producto creado exitosamente!');
+            alert('¡Producto creado!');
             limpiarFormulario();
         }
     };
@@ -101,7 +100,7 @@ export const ModalInventario = ({ cerrarModal }) => {
                             </h3>
                             {productoAEditar && (
                                 <button onClick={limpiarFormulario} className="text-sm text-gray-500 flex items-center gap-1 hover:text-facilito-azul">
-                                    <RotateCcw size={14} /> Cancelar Edición
+                                    <RotateCcw size={14} /> Cancelar
                                 </button>
                             )}
                         </div>
@@ -134,7 +133,18 @@ export const ModalInventario = ({ cerrarModal }) => {
                                 </div>
                             </div>
 
-                            {/* INPUT CÓDIGO DE BARRAS CON ESCÁNER */}
+                            {/* CHECKBOX DE GRANEL */}
+                            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer" onClick={() => setEsGranel(!esGranel)}>
+                                <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${esGranel ? 'bg-facilito-azul border-facilito-azul' : 'border-gray-300 bg-white'}`}>
+                                    {esGranel && <Scale size={16} className="text-white" />}
+                                </div>
+                                <div>
+                                    <span className="font-bold text-gray-700 text-sm block">Venta a Granel</span>
+                                    <span className="text-xs text-gray-400 block">Kilos, Litros, Metros...</span>
+                                </div>
+                            </div>
+
+                            {/* INPUT CÓDIGO */}
                             <div>
                                 <label className="text-xs font-bold text-gray-500 uppercase">Código de Barras</label>
                                 <div className="flex gap-2">
@@ -146,10 +156,9 @@ export const ModalInventario = ({ cerrarModal }) => {
                                         placeholder="Escanea o escribe..."
                                     />
                                     <button
-                                        type="button" // Importante: type="button" para que no envíe el formulario
+                                        type="button"
                                         onClick={() => setMostrarScanner(true)}
                                         className="bg-facilito-azul text-white p-2 rounded-lg hover:bg-blue-800"
-                                        title="Escanear con Cámara"
                                     >
                                         <ScanBarcode size={24} />
                                     </button>
@@ -179,10 +188,15 @@ export const ModalInventario = ({ cerrarModal }) => {
                             {productos.map(p => (
                                 <div key={p.id} className={`flex justify-between items-center p-3 border rounded-xl hover:shadow-md transition-all ${productoAEditar?.id === p.id ? 'border-orange-500 bg-orange-50 ring-2 ring-orange-100' : 'border-gray-200'}`}>
 
-                                    {/* Info Producto */}
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2">
                                             <p className="font-bold text-lg text-facilito-negro">{p.nombre}</p>
+                                            {/* Etiqueta de Granel */}
+                                            {p.esGranel && (
+                                                <span className="text-[10px] bg-purple-100 text-purple-600 px-2 rounded-full font-bold flex items-center gap-1">
+                                                    <Scale size={10} /> GRANEL
+                                                </span>
+                                            )}
                                             {p.stock <= 5 && (
                                                 <span className="text-[10px] bg-red-100 text-red-600 px-2 rounded-full font-bold">BAJO STOCK</span>
                                             )}
@@ -195,15 +209,13 @@ export const ModalInventario = ({ cerrarModal }) => {
                                         </div>
                                     </div>
 
-                                    {/* Acciones */}
                                     <div className="flex items-center gap-4 pl-4 border-l border-gray-100">
-                                        <span className="font-black text-xl text-facilito-verde">${p.precio.toFixed(2)}</span>
+                                        <span className="font-black text-xl text-facilito-verde">${parseFloat(p.precio).toFixed(2)}</span>
 
                                         <div className="flex gap-1">
                                             <button
                                                 onClick={() => setProductoAEditar(p)}
                                                 className="bg-blue-50 text-blue-600 p-2 rounded-lg hover:bg-blue-100 hover:scale-110 transition-transform"
-                                                title="Editar"
                                             >
                                                 <Edit2 size={20} />
                                             </button>
@@ -223,13 +235,12 @@ export const ModalInventario = ({ cerrarModal }) => {
                     </div>
                 </div>
 
-                {/* MODAL DE CÁMARA (Se sobrepone si está activo) */}
                 {mostrarScanner && (
                     <EscanerCamara
                         cerrar={() => setMostrarScanner(false)}
                         onScan={(codigoDetectado) => {
-                            setCodigo(codigoDetectado); // <--- Aquí escribimos en el formulario
-                            setMostrarScanner(false); // <--- Y cerramos
+                            setCodigo(codigoDetectado);
+                            setMostrarScanner(false);
                         }}
                     />
                 )}

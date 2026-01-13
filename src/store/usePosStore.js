@@ -5,6 +5,23 @@ import { collection, addDoc, updateDoc, deleteDoc, doc, setDoc } from 'firebase/
 
 export const usePosStore = create((set, get) => ({
 
+    // --- SECCIÓN DE SEGURIDAD (NUEVO) ---
+    estaLogueado: false, // Por defecto, la puerta está cerrada
+    pinSecreto: "1234",  // EL PIN MAESTRO (Luego podremos cambiarlo)
+
+    login: (pinIngresado) => {
+        const { pinSecreto } = get();
+        if (pinIngresado === pinSecreto) {
+            set({ estaLogueado: true }); // ¡Abierto sésamo!
+            return true;
+        }
+        return false; // PIN incorrecto
+    },
+
+    logout: () => set({ estaLogueado: false }), // Cerrar sesión
+
+    // ------------------------------------
+
     productos: [],
     ventas: [],
     carrito: [],

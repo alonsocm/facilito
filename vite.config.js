@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa' // <--- IMPORTAMOS
 export default defineConfig({
   plugins: [
     react(),
-    //basicSsl(),
+    basicSsl(),
     VitePWA({
       registerType: 'autoUpdate',
       // 👇👇👇 AGREGA ESTE BLOQUE AQUÍ 👇👇👇

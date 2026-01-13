@@ -8,17 +8,17 @@ import { BotonProducto } from './components/BotonProducto';
 import { TicketVenta } from './components/TicketVenta';
 import { ModalPago } from './components/ModalPago';
 import { ModalInventario } from './components/ModalInventario';
-import { ModalCorte } from './components/ModalCorte';
+import { Dashboard } from './components/Dashboard'; // Usamos el Dashboard nuevo
 import { ModalGranel } from './components/ModalGranel';
 import { EscanerCamara } from './components/EscanerCamara';
 import { TicketImprimible } from './components/TicketImprimible';
-// (Nota: Quitamos ModalRespaldo de aquí)
+import { PantallaBloqueo } from './components/PantallaBloqueo'; // <--- IMPORTAR
 
 // --- ICONOS ---
-import { Settings, Store, Search, X, ScanBarcode, ChevronUp, ChevronDown, ShoppingBag } from 'lucide-react';
-// (Nota: Quitamos CloudDownload de aquí)
+import { Settings, Store, Search, X, ScanBarcode, ChevronUp, ChevronDown, ShoppingBag, LogOut } from 'lucide-react';
 
 function App() {
+  // 1. --- TODOS LOS HOOKS PRIMERO (SIEMPRE ARRIBA) ---
   const {
     productos,
     agregarProducto,
@@ -26,33 +26,26 @@ function App() {
     obtenerTotal,
     ventas,
     buscarYAgregar,
-    carrito
+    carrito,
+    estaLogueado, // <--- Seguridad
+    logout        // <--- Seguridad
   } = usePosStore();
 
-  // --- ESTADOS ---
   const [mostrarPago, setMostrarPago] = useState(false);
   const [mostrarInventario, setMostrarInventario] = useState(false);
-  const [mostrarCorte, setMostrarCorte] = useState(false);
-  // const [mostrarRespaldo, setMostrarRespaldo] = useState(false); // OMITIDO
-
+  const [mostrarDashboard, setMostrarDashboard] = useState(false);
   const [productoAGranel, setProductoAGranel] = useState(null);
   const [mostrarScanner, setMostrarScanner] = useState(false);
-
-  // --- ESTADO TICKET MÓVIL ---
   const [ticketMovilAbierto, setTicketMovilAbierto] = useState(false);
-
-  // --- BUSCADOR ---
   const [busqueda, setBusqueda] = useState("");
   const inputBusquedaRef = useRef(null);
-
-  // --- IMPRESIÓN ---
   const ticketRef = useRef();
+
   const handlePrint = useReactToPrint({
     contentRef: ticketRef,
     documentTitle: 'Ticket Venta',
   });
 
-  // --- FOCO Y TECLADO ---
   useEffect(() => {
     const manejarTecladoGlobal = (e) => {
       if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
@@ -62,7 +55,7 @@ function App() {
     return () => window.removeEventListener('keydown', manejarTecladoGlobal);
   }, []);
 
-  // --- LÓGICA ---
+  // 2. --- FUNCIONES LÓGICAS ---
   const manejarEnterBusqueda = (e) => {
     if (e.key === 'Enter' && busqueda) {
       const fueAgregado = buscarYAgregar(busqueda);
@@ -97,6 +90,13 @@ function App() {
       (producto.codigoCorto && producto.codigoCorto === termino);
   });
 
+  // 3. --- EL GUARDIÁN DE SEGURIDAD (AHORA SÍ VA AQUÍ) ---
+  // Justo antes del return final, cuando ya se cargaron todos los hooks.
+  if (!estaLogueado) {
+    return <PantallaBloqueo />;
+  }
+
+  // 4. --- RENDER PRINCIPAL ---
   return (
     <div className="flex flex-col lg:flex-row h-[100dvh] bg-facilito-fondo overflow-hidden relative">
 
@@ -105,21 +105,17 @@ function App() {
       {/* --- SECCIÓN IZQUIERDA (CATÁLOGO) --- */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
 
-        {/* HEADER RESPONSIVO */}
+        {/* HEADER */}
         <header className="bg-white p-2 sm:p-3 shadow-sm border-b border-gray-200 flex justify-between items-center shrink-0 z-20">
-
-          {/* TÍTULO: Usamos 'truncate' y ocultamos 'ABARROTES' en pantallas pequeñas */}
           <h1 className="text-lg sm:text-2xl font-black text-facilito-azul tracking-tighter flex items-center gap-1 sm:gap-2 truncate mr-2">
             <span className="hidden sm:inline">ABARROTES</span>
             <span className="text-facilito-verde">FACILITO</span>
           </h1>
 
-          {/* BOTONES: shrink-0 evita que se aplasten si hay poco espacio */}
           <div className="flex items-center gap-2 shrink-0">
-
-            {/* Botón Corte de Caja */}
+            {/* Botón Dashboard */}
             <button
-              onClick={() => setMostrarCorte(true)}
+              onClick={() => setMostrarDashboard(true)}
               className="flex items-center gap-1 sm:gap-2 bg-gray-100 text-facilito-azul px-2 py-1.5 sm:px-3 sm:py-2 rounded-full font-bold hover:bg-blue-100 active:scale-95 transition-transform"
             >
               <Store size={18} className="sm:w-5 sm:h-5" />
@@ -130,7 +126,7 @@ function App() {
               )}
             </button>
 
-            {/* Botón Inventario (Engrane) */}
+            {/* Botón Inventario */}
             <button
               onClick={() => setMostrarInventario(true)}
               className="p-2 text-gray-500 hover:text-facilito-azul bg-gray-50 hover:bg-blue-50 rounded-full transition-colors active:scale-95"
@@ -138,6 +134,16 @@ function App() {
               <Settings size={22} className="sm:w-6 sm:h-6" />
             </button>
 
+            {/* Botón Salir (Logout) */}
+            <button
+              onClick={() => {
+                if (confirm("¿Cerrar sesión y bloquear?")) logout();
+              }}
+              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors active:scale-95"
+              title="Bloquear Terminal"
+            >
+              <LogOut size={22} className="sm:w-6 sm:h-6" />
+            </button>
           </div>
         </header>
 
@@ -243,9 +249,7 @@ function App() {
       {/* --- MODALES --- */}
       {mostrarPago && <ModalPago total={obtenerTotal()} cerrarModal={() => setMostrarPago(false)} completarVenta={manejarCobro} />}
       {mostrarInventario && <ModalInventario cerrarModal={() => setMostrarInventario(false)} />}
-      {mostrarCorte && <ModalCorte ventas={ventas} cerrarModal={() => setMostrarCorte(false)} />}
-
-      {/* (ModalRespaldo OMITIDO) */}
+      {mostrarDashboard && <Dashboard cerrarModal={() => setMostrarDashboard(false)} />}
 
       {productoAGranel && (
         <ModalGranel

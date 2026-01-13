@@ -16,7 +16,7 @@ export const ModalInventario = ({ cerrarModal }) => {
     const [stock, setStock] = useState('');
     const [categoria, setCategoria] = useState('');
     const [codigo, setCodigo] = useState('');
-    const [esGranel, setEsGranel] = useState(false); // <--- NUEVO ESTADO
+    const [esGranel, setEsGranel] = useState(false);
 
     useEffect(() => {
         if (productoAEditar) {

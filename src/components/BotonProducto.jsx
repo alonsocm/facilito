@@ -1,45 +1,138 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
+import { Plus, Minus } from 'lucide-react';
 
 export const BotonProducto = ({ producto, alHacerClick }) => {
-    const sinStock = producto.stock <= 0;
-    const stockBajo = producto.stock > 0 && producto.stock < 5; // Alerta amarilla si quedan menos de 5
+    const [presionando, setPresionando] = useState(false);
+    const timerRef = useRef(null);
+
+    const [mostrarInputCantidad, setMostrarInputCantidad] = useState(false);
+    const [cantidadManual, setCantidadManual] = useState(1);
+
+    // --- LÓGICA DE PRESIÓN ---
+    const iniciarPresion = () => {
+        // 1. SI ES A GRANEL, NO ACTIVAMOS EL LONG PRESS
+        // Simplemente no hacemos nada aquí, dejamos que el click normal actúe al soltar.
+        if (producto.esGranel) return;
+
+        setPresionando(true);
+        timerRef.current = setTimeout(() => {
+            setMostrarInputCantidad(true);
+            setPresionando(false);
+        }, 500);
+    };
+
+    const terminarPresion = () => {
+        // 2. SI ES A GRANEL, SIEMPRE ES UN CLICK NORMAL
+        if (producto.esGranel) {
+            alHacerClick(1); // Esto abrirá el ModalGranel en App.jsx
+            return;
+        }
+
+        // Lógica normal para productos estándar
+        if (timerRef.current && !mostrarInputCantidad) {
+            clearTimeout(timerRef.current);
+            alHacerClick(1);
+        }
+        setPresionando(false);
+    };
+
+    const cancelarPresion = () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+        setPresionando(false);
+    };
+    // -------------------------
+
+    const confirmarCantidad = () => {
+        if (cantidadManual > 0) alHacerClick(parseInt(cantidadManual));
+        setMostrarInputCantidad(false);
+        setCantidadManual(1);
+    };
 
     return (
-        <button
-            onClick={() => !sinStock && alHacerClick(producto)}
-            disabled={sinStock} // Desactiva el clic si no hay stock
-            className={`
-        w-full h-40 
-        rounded-2xl shadow-md 
-        flex flex-col items-center justify-center 
-        transition-all duration-150 relative overflow-hidden
-        p-2 border-4
-        ${sinStock
-                    ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60' // Estilo Agotado
-                    : 'bg-white border-gray-200 hover:border-facilito-azul hover:bg-blue-50 active:bg-blue-100' // Estilo Normal
-                }
-      `}
-        >
-            {/* Etiqueta de Stock (Esquina superior) */}
-            <div className={`
-        absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-full
-        ${sinStock ? 'bg-red-100 text-red-500' :
-                    stockBajo ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600'}
-      `}>
-                {sinStock ? 'AGOTADO' : `${producto.stock} disp.`}
-            </div>
+        <>
+            <button
+                onMouseDown={iniciarPresion}
+                onMouseUp={terminarPresion}
+                onMouseLeave={cancelarPresion}
+                onTouchStart={iniciarPresion}
+                onTouchEnd={terminarPresion}
 
-            <span className={`text-xl font-bold mb-2 leading-tight text-center ${sinStock ? 'text-gray-400' : 'text-facilito-azul'}`}>
-                {producto.nombre}
-            </span>
+                className={`
+                relative bg-white p-3 sm:p-4 rounded-2xl shadow-sm border-2 transition-all duration-200
+                flex flex-col items-start justify-between h-full group overflow-hidden select-none w-full
+                ${presionando ? 'scale-95 border-facilito-azul bg-blue-50' : 'border-transparent hover:border-blue-200 hover:shadow-md'}
+            `}
+            >
+                <div className="w-full flex flex-col gap-2 sm:gap-3">
+                    <div className="w-full aspect-square rounded-xl bg-gray-50 overflow-hidden relative">
+                        {producto.imagen ? (
+                            <img src={producto.imagen} alt={producto.nombre} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold text-4xl bg-gray-100">
+                                {producto.nombre.charAt(0).toUpperCase()}
+                            </div>
+                        )}
 
-            <span className={`text-3xl font-black ${sinStock ? 'text-gray-300' : 'text-facilito-verde'}`}>
-                ${producto.precio.toFixed(2)}
-            </span>
+                        {/* ETIQUETA VISUAL PARA GRANEL */}
+                        {producto.esGranel && (
+                            <span className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                                KG / $
+                            </span>
+                        )}
+                    </div>
 
-            <span className="text-sm text-gray-400 mt-1 font-normal uppercase">
-                {producto.categoria}
-            </span>
-        </button>
+                    <p className="font-bold text-facilito-negro leading-tight line-clamp-2 text-left text-sm sm:text-base">
+                        {producto.nombre}
+                    </p>
+                </div>
+
+                <p className="text-facilito-verde font-black text-lg sm:text-xl text-left mt-2 w-full">
+                    ${producto.precio}
+                </p>
+
+                {/* Icono flotante: Plus para normales, Balanza/Grid para Granel (Opcional) */}
+                <div className="absolute bottom-3 right-3 bg-blue-100 text-facilito-azul p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity scale-0 group-hover:scale-100 duration-200">
+                    <Plus size={18} />
+                </div>
+            </button>
+
+            {/* --- MODAL (Solo se muestra si NO es granel) --- */}
+            {mostrarInputCantidad && (
+                <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white p-6 rounded-3xl shadow-2xl w-72 flex flex-col items-center animate-slide-up">
+                        <h3 className="font-bold text-lg mb-4 text-center text-gray-700 leading-tight">
+                            Cantidad para <br />
+                            <span className="text-facilito-azul text-xl">{producto.nombre}</span>
+                        </h3>
+
+                        <div className="flex items-center gap-4 mb-6 bg-gray-50 p-2 rounded-full">
+                            <button onClick={() => setCantidadManual(Math.max(1, cantidadManual - 1))} className="w-12 h-12 rounded-full bg-white text-facilito-azul shadow-sm hover:bg-blue-50 flex items-center justify-center transition-all active:scale-90">
+                                <Minus size={24} />
+                            </button>
+                            <input
+                                type="number"
+                                autoFocus
+                                value={cantidadManual}
+                                onChange={(e) => setCantidadManual(Number(e.target.value))}
+                                onKeyDown={(e) => e.key === 'Enter' && confirmarCantidad()}
+                                className="w-20 text-center text-3xl font-black bg-transparent outline-none text-facilito-negro"
+                            />
+                            <button onClick={() => setCantidadManual(cantidadManual + 1)} className="w-12 h-12 rounded-full bg-facilito-azul text-white shadow-md hover:bg-blue-700 flex items-center justify-center transition-all active:scale-90">
+                                <Plus size={24} />
+                            </button>
+                        </div>
+
+                        <div className="flex gap-3 w-full">
+                            <button onClick={() => setMostrarInputCantidad(false)} className="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl transition-colors">
+                                Cancelar
+                            </button>
+                            <button onClick={confirmarCantidad} className="flex-1 py-3 bg-facilito-azul text-white font-bold rounded-2xl shadow-lg shadow-blue-900/20 hover:bg-blue-700 transition-all active:scale-95">
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };

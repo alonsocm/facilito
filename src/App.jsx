@@ -105,23 +105,39 @@ function App() {
       {/* --- SECCIÓN IZQUIERDA (CATÁLOGO) --- */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
 
-        {/* HEADER */}
-        <header className="bg-white p-3 shadow-sm border-b border-gray-200 flex justify-between items-center shrink-0 z-20">
-          <h1 className="text-xl lg:text-2xl font-black text-facilito-azul tracking-tighter flex items-center gap-2">
-            ABARROTES <span className="text-facilito-verde">FACILITO</span>
+        {/* HEADER RESPONSIVO */}
+        <header className="bg-white p-2 sm:p-3 shadow-sm border-b border-gray-200 flex justify-between items-center shrink-0 z-20">
+
+          {/* TÍTULO: Usamos 'truncate' y ocultamos 'ABARROTES' en pantallas pequeñas */}
+          <h1 className="text-lg sm:text-2xl font-black text-facilito-azul tracking-tighter flex items-center gap-1 sm:gap-2 truncate mr-2">
+            <span className="hidden sm:inline">ABARROTES</span>
+            <span className="text-facilito-verde">FACILITO</span>
           </h1>
-          <div className="flex items-center gap-2">
+
+          {/* BOTONES: shrink-0 evita que se aplasten si hay poco espacio */}
+          <div className="flex items-center gap-2 shrink-0">
 
             {/* Botón Corte de Caja */}
-            <button onClick={() => setMostrarCorte(true)} className="flex items-center gap-2 bg-gray-100 text-facilito-azul px-3 py-2 rounded-full font-bold hover:bg-blue-100">
-              <Store size={20} />
-              {ventas.length > 0 && <span className="bg-facilito-rojo text-white text-xs px-2 py-0.5 rounded-full">{ventas.length}</span>}
+            <button
+              onClick={() => setMostrarCorte(true)}
+              className="flex items-center gap-1 sm:gap-2 bg-gray-100 text-facilito-azul px-2 py-1.5 sm:px-3 sm:py-2 rounded-full font-bold hover:bg-blue-100 active:scale-95 transition-transform"
+            >
+              <Store size={18} className="sm:w-5 sm:h-5" />
+              {ventas.length > 0 && (
+                <span className="bg-facilito-rojo text-white text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full">
+                  {ventas.length}
+                </span>
+              )}
             </button>
 
-            {/* Botón Inventario */}
-            <button onClick={() => setMostrarInventario(true)} className="p-2 text-gray-400 hover:text-facilito-azul hover:bg-blue-50 rounded-full">
-              <Settings size={24} />
+            {/* Botón Inventario (Engrane) */}
+            <button
+              onClick={() => setMostrarInventario(true)}
+              className="p-2 text-gray-500 hover:text-facilito-azul bg-gray-50 hover:bg-blue-50 rounded-full transition-colors active:scale-95"
+            >
+              <Settings size={22} className="sm:w-6 sm:h-6" />
             </button>
+
           </div>
         </header>
 

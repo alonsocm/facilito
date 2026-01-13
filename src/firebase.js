@@ -1,6 +1,9 @@
-// src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import {
+    getFirestore,
+    enableIndexedDbPersistence,
+    CACHE_SIZE_UNLIMITED
+} from "firebase/firestore";
 
 // --- PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE ---
 const firebaseConfig = {
@@ -13,5 +16,24 @@ const firebaseConfig = {
 };
 // ---------------------------------------------
 
+// 1. Inicializar App
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app); // Exportamos la referencia a la base de datos
+
+// 2. Inicializar Firestore
+const db = getFirestore(app);
+
+// 3. --- ACTIVAR MODO OFFLINE (PERSISTENCIA) ---
+// Esto hace que la base de datos funcione sin internet
+enableIndexedDbPersistence(db, { forceOwnership: true })
+    .then(() => {
+        console.log("✅ Persistencia Offline Activada: El sistema funcionará sin internet.");
+    })
+    .catch((err) => {
+        if (err.code == 'failed-precondition') {
+            console.warn("⚠️ Error Offline: Tienes múltiples pestañas abiertas. Cierra las otras.");
+        } else if (err.code == 'unimplemented') {
+            console.warn("⚠️ Error Offline: Tu navegador no soporta almacenamiento local.");
+        }
+    });
+
+export { db };

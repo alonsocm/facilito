@@ -64,9 +64,17 @@ function App() {
   };
 
   const manejarCobro = async (pagoCliente) => {
-    await registrarVenta(pagoCliente);
+    // 1. Guardamos el resultado (true o false)
+    const exito = await registrarVenta(pagoCliente);
+
+    // 2. SI FALLÓ, NOS DETENEMOS AQUÍ.
+    // El usuario verá la alerta de error y el modal seguirá abierto para que intente de nuevo.
+    if (!exito) return;
+
+    // 3. SI TUVO ÉXITO, CONTINUAMOS...
     setMostrarPago(false);
     setTicketMovilAbierto(false);
+
     if (confirm("¿Imprimir ticket?")) {
       setTimeout(() => handlePrint(), 500);
     }

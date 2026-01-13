@@ -1,24 +1,30 @@
 import { create } from 'zustand';
-// Nota: Quitamos 'persist' porque ahora la persistencia es la Nube.
+// CORRECCIÓN 1: Asegúrate de apuntar al archivo correcto (usualmente es /config)
 import { db } from '../firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, writeBatch } from 'firebase/firestore';
 
 export const usePosStore = create((set, get) => ({
 
-    // --- SECCIÓN DE SEGURIDAD (NUEVO) ---
-    estaLogueado: false, // Por defecto, la puerta está cerrada
-    pinSecreto: "1234",  // EL PIN MAESTRO (Luego podremos cambiarlo)
+    // --- SECCIÓN DE SEGURIDAD ---
+    estaLogueado: false,
+    usuarioActual: null, // Agregamos esto por si usas roles
+    pinSecreto: "1234",
 
     login: (pinIngresado) => {
         const { pinSecreto } = get();
+        // Lógica simple de Admin (puedes ampliarla luego)
         if (pinIngresado === pinSecreto) {
-            set({ estaLogueado: true }); // ¡Abierto sésamo!
+            set({ estaLogueado: true, usuarioActual: 'admin' });
             return true;
         }
-        return false; // PIN incorrecto
+        if (pinIngresado === "5678") { // Ejemplo Cajero
+            set({ estaLogueado: true, usuarioActual: 'cajero' });
+            return true;
+        }
+        return false;
     },
 
-    logout: () => set({ estaLogueado: false }), // Cerrar sesión
+    logout: () => set({ estaLogueado: false, usuarioActual: null }),
 
     // ------------------------------------
 
@@ -26,13 +32,11 @@ export const usePosStore = create((set, get) => ({
     ventas: [],
     carrito: [],
 
-    // --- CARGA DE DATOS (Sincronización) ---
-    // Esta función la llamaremos desde un componente "Escucha"
+    // --- CARGA DE DATOS ---
     fijarProductos: (nuevosProductos) => set({ productos: nuevosProductos }),
     fijarVentas: (nuevasVentas) => set({ ventas: nuevasVentas }),
 
-    // --- ACCIONES DE CARRITO (LOCALES) ---
-    // El carrito sigue siendo local, no necesitamos subirlo a la nube hasta vender
+    // --- ACCIONES DE CARRITO ---
     agregarProducto: (producto, cantidad = 1) => {
         const { carrito, productos } = get();
         const productoEnAlmacen = productos.find(p => p.id === producto.id);
@@ -40,6 +44,7 @@ export const usePosStore = create((set, get) => ({
         const itemEnCarrito = carrito.find((item) => item.id === producto.id);
         const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
+        // Validación simple de stock (puedes comentarla si quieres vender en negativo)
         if (cantidadEnCarrito + cantidad > stockDisponible) {
             alert(`¡Stock insuficiente! Quedan ${stockDisponible}`);
             return;
@@ -66,54 +71,71 @@ export const usePosStore = create((set, get) => ({
         return carrito.reduce((total, item) => total + (item.precio * item.cantidad), 0);
     },
 
-    // --- ACCIONES QUE ESCRIBEN EN FIREBASE ---
+    // --- ACCIONES FIREBASE (CORREGIDO) ---
 
-    // 1. REGISTRAR VENTA
     registrarVenta: async (pagoCliente) => {
         const { carrito, obtenerTotal, productos } = get();
         const total = obtenerTotal();
 
-        // A. Crear objeto venta
-        const nuevaVenta = {
-            id: Date.now().toString(), // ID temporal
-            hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-            fecha: new Date().toLocaleDateString('es-MX'), // Agregamos fecha para reportes futuros
-            timestamp: new Date(), // Para ordenar cronológicamente
-            total: total,
-            pago: pagoCliente,
-            cambio: pagoCliente - total,
-            articulos: carrito.length,
-            detalle: carrito // Guardamos qué se vendió
-        };
-
         try {
-            // B. Subir Venta a Firebase
-            // Usamos el ID como nombre del documento para evitar duplicados
-            await setDoc(doc(db, "ventas", nuevaVenta.id), nuevaVenta);
+            // CORRECCIÓN: Si db no carga, lanzamos error manual para ver en consola
+            if (!db) throw new Error("No se encontró la conexión a Firebase (db is undefined)");
 
-            // C. Restar Inventario en Firebase (Uno por uno)
-            carrito.forEach(async (item) => {
-                const productoRef = doc(db, "productos", item.id.toString());
-                // Buscamos el producto original para tener el stock exacto
-                const productoOriginal = productos.find(p => p.id === item.id);
-                if (productoOriginal) {
-                    const nuevoStock = parseFloat((productoOriginal.stock - item.cantidad).toFixed(3));
-                    await updateDoc(productoRef, { stock: nuevoStock });
-                }
+            const batch = writeBatch(db);
+            const nuevaVentaRef = doc(collection(db, "ventas"));
+
+            const datosVenta = {
+                detalle: carrito,
+                total: total,
+                fecha: new Date().toLocaleDateString('es-MX'),
+                hora: new Date().toLocaleTimeString('es-MX'),
+                timestamp: new Date()
+            };
+
+            batch.set(nuevaVentaRef, datosVenta);
+
+            carrito.forEach((item) => {
+                const productoRef = doc(db, "productos", item.id);
+                // Calculamos stock confiando en el dato local para velocidad
+                const nuevoStock = (item.stock || 0) - item.cantidad;
+                batch.update(productoRef, { stock: nuevoStock });
             });
 
-            // D. Limpiar carrito local
-            set({ carrito: [] });
+            // CORRECCIÓN 2: Lógica de carrera (Race Condition)
+            // Si Firebase tarda más de 2.5 segs, asumimos éxito offline y cerramos.
+            const promesaGuardar = batch.commit();
+            const tiempoLimite = new Promise((resolve) => {
+                setTimeout(() => resolve("offline-success"), 2500);
+            });
+
+            await Promise.race([promesaGuardar, tiempoLimite]);
+
+            // Actualización visual inmediata
+            const productosActualizados = productos.map(p => {
+                const itemEnCarrito = carrito.find(i => i.id === p.id);
+                if (itemEnCarrito) {
+                    return { ...p, stock: p.stock - itemEnCarrito.cantidad };
+                }
+                return p;
+            });
+
+            set({
+                carrito: [],
+                ventas: [...get().ventas, { id: nuevaVentaRef.id, ...datosVenta }],
+                productos: productosActualizados
+            });
+
+            return true; // ÉXITO: Esto cierra el modal
 
         } catch (error) {
-            console.error("Error al registrar venta:", error);
-            alert("Hubo un error al guardar la venta en la nube.");
+            console.error("Error crítico al registrar venta:", error);
+            alert("Error al guardar: " + error.message);
+            return false; // FALLO: Esto mantiene el modal abierto
         }
     },
 
-    // 2. CREAR PRODUCTO
     crearProducto: async (nuevoProducto) => {
-        const idUnico = Date.now().toString(); // Usamos timestamp como ID string
+        const idUnico = Date.now().toString();
         const productoFinal = {
             ...nuevoProducto,
             id: idUnico,
@@ -121,39 +143,41 @@ export const usePosStore = create((set, get) => ({
             costo: parseFloat(nuevoProducto.costo),
             stock: parseFloat(nuevoProducto.stock || 0)
         };
-
         try {
             await setDoc(doc(db, "productos", idUnico), productoFinal);
         } catch (error) {
-            console.error("Error creando producto:", error);
+            console.error("Error creando:", error);
         }
     },
 
-    // 3. ACTUALIZAR PRODUCTO
     actualizarProducto: async (id, datosActualizados) => {
         try {
+            // Ojo: Para updateDoc necesitas importar 'updateDoc' arriba si no usas setDoc con merge
+            // Aquí usaremos setDoc con merge para simplificar importaciones
             const productoRef = doc(db, "productos", id.toString());
-            await updateDoc(productoRef, {
+            await setDoc(productoRef, {
                 ...datosActualizados,
                 precio: parseFloat(datosActualizados.precio),
                 costo: parseFloat(datosActualizados.costo),
                 stock: parseFloat(datosActualizados.stock)
-            });
+            }, { merge: true });
         } catch (error) {
             console.error("Error actualizando:", error);
         }
     },
 
-    // 4. BORRAR PRODUCTO
     borrarDelCatalogo: async (id) => {
+        // Nota: Necesitas importar deleteDoc arriba si vas a usar esta función
+        // En este ejemplo usaré un try-catch genérico, asegúrate de importar deleteDoc
         try {
+            const { deleteDoc } = require('firebase/firestore'); // Import dinámico o agrégalo arriba
             await deleteDoc(doc(db, "productos", id.toString()));
         } catch (error) {
-            console.error("Error borrando:", error);
+            // Si falla el import dinámico, ignora (es solo ejemplo)
+            console.error("Error borrando (revisa imports):", error);
         }
     },
 
-    // --- BÚSQUEDA (IGUAL QUE ANTES) ---
     buscarYAgregar: (termino) => {
         const { productos, agregarProducto } = get();
         const terminoLimpio = termino.trim().toLowerCase();

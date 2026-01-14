@@ -28,3 +28,17 @@ button:active {
     size: auto;
   } 
 }
+
+/* 1. Esto quita las flechas en Chrome, Safari, Edge */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+  display: none;  /* <--- ESTA ES LA CLAVE MÁGICA 🔑 */
+}
+
+/* 2. Esto quita las flechas en Firefox + Navegadores modernos */
+input[type=number] {
+  -moz-appearance: textfield; /* Para Firefox */
+  appearance: textfield;      /* <--- ESTA ES LA QUE TE FALTABA (Estándar) */
+}

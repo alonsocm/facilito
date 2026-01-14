@@ -1,141 +1,152 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Banknote, Coins, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { X, Banknote, Coins, CheckCircle2, Eraser } from 'lucide-react';
 
 export const ModalPago = ({ total, cerrarModal, completarVenta }) => {
     const [efectivo, setEfectivo] = useState('');
     const inputRef = useRef(null);
 
-    // Auto-foco al abrir
+    // MEJORA 1: Auto-seleccionar el texto al abrir
+    // Esto permite que si escribes "200", se borre lo anterior automáticamente.
     useEffect(() => {
-        if (inputRef.current) inputRef.current.focus();
+        if (inputRef.current) {
+            inputRef.current.focus();
+            setTimeout(() => inputRef.current.select(), 100); // Pequeño delay para asegurar selección
+        }
     }, []);
 
-    // Cálculos matemáticos
     const pagoCliente = parseFloat(efectivo) || 0;
     const cambio = pagoCliente - total;
     const falta = total - pagoCliente;
     const esSuficiente = pagoCliente >= total;
 
-    // Manejar el cobro final
     const manejarCobrar = (e) => {
         if (e) e.preventDefault();
-
-        if (!esSuficiente) return; // No dejar cobrar si falta dinero
-
-        // Enviamos el pago real (o el total si puso exacto) para el ticket
+        if (!esSuficiente) return;
         completarVenta(pagoCliente);
     };
 
-    // Botones de denominación rápida
     const billetes = [20, 50, 100, 200, 500, 1000];
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-bounce-in">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center z-[70] p-4 animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
 
-                {/* Cabecera */}
-                <div className="bg-facilito-azul p-6 flex justify-between items-center text-white">
-                    <h2 className="text-2xl font-bold flex items-center gap-2">
-                        <Banknote /> Cobrar Venta
+                {/* HEADER */}
+                <div className="bg-facilito-azul p-5 flex justify-between items-center text-white shrink-0">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                        <Banknote className="text-blue-300" /> Cobrar Venta
                     </h2>
-                    <button onClick={cerrarModal} className="bg-white/20 p-2 rounded-full hover:bg-white/40">
-                        <X size={24} />
+                    <button onClick={cerrarModal} className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors">
+                        <X size={20} />
                     </button>
                 </div>
 
-                <div className="p-8">
+                <div className="p-6 overflow-y-auto">
 
-                    {/* RESUMEN TOTAL */}
-                    <div className="text-center mb-8">
-                        <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">Total a Pagar</p>
-                        <p className="text-6xl font-black text-facilito-negro mt-2">
+                    {/* TOTAL A PAGAR (Más compacto para dar espacio al Cambio) */}
+                    <div className="text-center mb-6">
+                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Total a Pagar</p>
+                        <p className="text-5xl font-black text-facilito-negro tracking-tight">
                             ${total.toFixed(2)}
                         </p>
                     </div>
 
                     <form onSubmit={manejarCobrar} className="space-y-6">
 
-                        {/* INPUT DE EFECTIVO */}
+                        {/* INPUT DE EFECTIVO MEJORADO */}
                         <div>
-                            <label className="block text-sm font-bold text-gray-500 mb-2">EFECTIVO RECIBIDO</label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-400">$</span>
+                            <div className="relative group">
+                                <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold transition-colors ${esSuficiente ? 'text-green-600' : 'text-gray-400'}`}>$</span>
+
                                 <input
                                     ref={inputRef}
                                     type="number"
                                     step="0.50"
                                     value={efectivo}
                                     onChange={(e) => setEfectivo(e.target.value)}
-                                    className={`w-full pl-10 pr-4 py-4 text-3xl font-bold border-4 rounded-xl outline-none transition-colors
-                    ${esSuficiente
-                                            ? 'border-facilito-verde bg-green-50 text-green-800 focus:ring-4 focus:ring-green-100'
-                                            : 'border-gray-300 focus:border-facilito-azul focus:ring-4 focus:ring-blue-50'
+                                    // MEJORA: Al hacer clic, selecciona todo para corregir rápido
+                                    onClick={(e) => e.target.select()}
+                                    className={`w-full pl-10 pr-12 py-4 text-4xl font-black border-4 rounded-2xl outline-none transition-all text-center
+                                    ${esSuficiente
+                                            ? 'border-green-500 bg-green-50 text-green-800 shadow-lg shadow-green-100'
+                                            : 'border-gray-200 focus:border-facilito-azul focus:ring-4 focus:ring-blue-50 text-gray-700'
                                         }`}
                                     placeholder="0.00"
-                                    autoFocus
                                 />
+
+                                {/* MEJORA 2: Botón para limpiar input rápido */}
+                                {efectivo && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEfectivo('');
+                                            inputRef.current.focus();
+                                        }}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 p-1"
+                                    >
+                                        <Eraser size={24} />
+                                    </button>
+                                )}
                             </div>
                         </div>
 
-                        {/* BOTONES RÁPIDOS (BILLETES) */}
-                        <div className="grid grid-cols-3 gap-2">
-                            {/* Botón Exacto */}
+                        {/* BILLETES RÁPIDOS */}
+                        <div className="grid grid-cols-4 gap-2">
                             <button
                                 type="button"
-                                onClick={() => setEfectivo(total.toString())}
-                                className="py-2 px-1 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 text-sm"
+                                onClick={() => setEfectivo(total.toFixed(2))}
+                                className="col-span-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 text-sm active:scale-95 transition-all"
                             >
                                 Exacto
                             </button>
 
-                            {/* Billetes sugeridos (Solo mostramos los que son mayores al total) */}
-                            {billetes.filter(b => b >= total).slice(0, 5).map(billete => (
+                            {/* Lógica inteligente: Mostramos billetes cercanos al total */}
+                            {billetes.map(billete => (
                                 <button
                                     key={billete}
                                     type="button"
                                     onClick={() => setEfectivo(billete.toString())}
-                                    className="py-2 px-1 bg-blue-50 text-facilito-azul border border-blue-100 font-bold rounded-lg hover:bg-blue-100 hover:scale-105 transition-transform"
+                                    // Deshabilitamos billetes menores al total para evitar errores (opcional)
+                                    className={`py-3 font-bold rounded-xl transition-all active:scale-95
+                                    ${billete < total
+                                            ? 'bg-gray-50 text-gray-300 border border-gray-100' // Billetes inútiles
+                                            : 'bg-blue-50 text-facilito-azul border-2 border-blue-100 hover:bg-blue-100 hover:border-blue-300' // Billetes útiles
+                                        }`}
                                 >
                                     ${billete}
                                 </button>
                             ))}
                         </div>
 
-                        {/* INFO CAMBIO / FALTA */}
-                        <div className={`p-4 rounded-xl flex justify-between items-center transition-colors ${esSuficiente ? 'bg-green-100' : 'bg-red-50'}`}>
-                            <div className="flex items-center gap-2">
-                                {esSuficiente ? <Coins className="text-green-600" /> : <X className="text-red-400" />}
-                                <span className={`font-bold ${esSuficiente ? 'text-green-700' : 'text-red-500'}`}>
-                                    {esSuficiente ? 'CAMBIO:' : 'FALTA:'}
+                        {/* INFO CAMBIO (Visualmente Impactante) */}
+                        <div className={`
+                            p-5 rounded-2xl border-2 flex flex-col items-center justify-center transition-all duration-300
+                            ${esSuficiente ? 'bg-green-100 border-green-300 scale-105 shadow-xl' : 'bg-gray-50 border-gray-200'}
+                        `}>
+                            <div className="flex items-center gap-2 mb-1">
+                                {esSuficiente ? <Coins className="text-green-600" size={20} /> : null}
+                                <span className={`text-sm font-black uppercase tracking-widest ${esSuficiente ? 'text-green-700' : 'text-gray-400'}`}>
+                                    {esSuficiente ? 'Entregar Cambio' : 'Falta por pagar'}
                                 </span>
                             </div>
-                            <span className={`text-3xl font-black ${esSuficiente ? 'text-green-700' : 'text-red-500'}`}>
+                            <span className={`text-5xl font-black ${esSuficiente ? 'text-green-700' : 'text-gray-300'}`}>
                                 ${esSuficiente ? cambio.toFixed(2) : falta.toFixed(2)}
                             </span>
                         </div>
 
-                        {/* BOTÓN COBRAR (Grande) */}
+                        {/* BOTÓN FINAL */}
                         <button
                             type="submit"
                             disabled={!esSuficiente}
-                            className={`w-full py-5 rounded-2xl font-black text-xl flex items-center justify-center gap-3 shadow-xl transition-all
-                ${esSuficiente
-                                    ? 'bg-facilito-azul text-white hover:bg-blue-900 hover:scale-[1.02]'
-                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                            className={`w-full py-4 rounded-2xl font-black text-xl shadow-xl transition-all flex items-center justify-center gap-2
+                            ${esSuficiente
+                                    ? 'bg-facilito-azul text-white hover:bg-blue-700 hover:scale-[1.02] active:scale-95'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                         >
-                            {esSuficiente ? (
-                                <>
-                                    <CheckCircle2 size={28} />
-                                    COBRAR E IMPRIMIR
-                                </>
-                            ) : (
-                                <>
-                                    Falta dinero...
-                                </>
-                            )}
+                            <CheckCircle2 size={24} />
+                            {esSuficiente ? 'FINALIZAR VENTA' : 'Complete el monto'}
                         </button>
                     </form>
-
                 </div>
             </div>
         </div>

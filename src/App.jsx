@@ -236,6 +236,7 @@ function App() {
               <ScanBarcode size={20} />
             </button>
           </div>
+        </div>
 
         {/* GRID PRODUCTOS */}
         <main className={`flex-1 overflow-y-auto p-2 pb-24 lg:pb-4 transition-colors duration-300 ${modoRecepcion ? 'bg-orange-50 ring-4 ring-inset ring-orange-400' : 'bg-gray-100'}`}>
@@ -385,7 +386,7 @@ function App() {
         }}
       />
 
-    </div >
+    </div>
   );
 }
 

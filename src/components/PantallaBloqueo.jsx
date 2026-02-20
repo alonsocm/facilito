@@ -111,6 +111,5 @@ export const PantallaBloqueo = () => {
 
             <p className="fixed bottom-6 text-xs text-white/20">ID: TERMINAL-01</p>
         </div>
-        </div>
     );
 };

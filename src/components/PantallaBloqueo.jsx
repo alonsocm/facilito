@@ -31,7 +31,12 @@ export const PantallaBloqueo = () => {
     };
 
     return (
-        <div className="fixed inset-0 bg-facilito-azul flex flex-col items-center justify-center text-white z-50">
+        <div className="fixed inset-0 flex flex-col items-center justify-center text-white z-50 overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #0f2461 0%, #1E3A8A 50%, #1e4fa8 100%)' }}>
+            {/* Círculos decorativos de fondo */}
+            <div className="absolute top-[-10%] right-[-10%] w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-facilito-verde/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-[40%] left-[-5%] w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none" />
 
             {/* LOGO Y TEXTO */}
             <div className="mb-8 text-center animate-fade-in">
@@ -105,6 +110,7 @@ export const PantallaBloqueo = () => {
             </button>
 
             <p className="fixed bottom-6 text-xs text-white/20">ID: TERMINAL-01</p>
+        </div>
         </div>
     );
 };

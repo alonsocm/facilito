@@ -41,29 +41,33 @@ export const TicketVenta = ({ alPresionarCobrar }) => {
             {/* 2. LISTA DE PRODUCTOS */}
             <div className="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50">
                 {carrito.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
-                        <ShoppingBag size={48} className="mb-2" />
-                        <p>Carrito vacío</p>
+                    <div className="h-full flex flex-col items-center justify-center text-gray-400 select-none">
+                        <div className="bg-gray-100 rounded-full p-6 mb-4">
+                            <ShoppingBag size={40} className="text-gray-300" />
+                        </div>
+                        <p className="font-bold text-gray-400 text-sm">Sin artículos aún</p>
+                        <p className="text-gray-300 text-xs mt-1 text-center px-8">Toca un producto del catálogo para comenzar</p>
                     </div>
                 ) : (
                     carrito.map((item) => (
                         <div key={item.id} className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center animate-fade-in">
                             <div className="flex-1 min-w-0 pr-2">
-                                <h4 className="font-bold text-gray-800 text-sm truncate">{item.nombre}</h4>
-                                <div className="text-xs text-gray-500 mt-0.5">
-                                    <span className="font-mono bg-gray-100 px-1 rounded">{item.cantidad}</span> x ${item.precio.toFixed(2)}
+                                <h4 className="font-black text-facilito-negro leading-tight truncate">{item.nombre}</h4>
+                                <div className="text-xs text-gray-400 mt-0.5 font-medium">
+                                    <span className="bg-gray-100 px-1.5 py-0.5 rounded font-bold text-gray-500">{item.cantidad}</span>
+                                    <span className="ml-1">× ${item.precio.toFixed(2)}</span>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 shrink-0">
-                                <span className="font-bold text-facilito-azul text-lg">
+                            <div className="flex items-center gap-2 shrink-0">
+                                <span className="font-black text-facilito-verde text-lg">
                                     ${(item.cantidad * item.precio).toFixed(2)}
                                 </span>
                                 <button
                                     onClick={() => eliminarProducto(item.id)}
-                                    className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition-colors"
+                                    className="bg-red-50 text-red-400 p-1.5 rounded-lg hover:bg-red-100 hover:text-red-600 transition-colors"
                                 >
-                                    <Trash2 size={16} />
+                                    <Trash2 size={14} />
                                 </button>
                             </div>
                         </div>

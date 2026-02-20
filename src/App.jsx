@@ -18,6 +18,8 @@ import { PantallaBloqueo } from './components/PantallaBloqueo'; // <--- IMPORTAR
 // --- ICONOS ---
 import { Settings, Store, Search, X, ScanBarcode, ChevronUp, ChevronDown, ShoppingBag, LogOut } from 'lucide-react';
 
+// z-index scale: ticket-drawer=50, inventario=60, dashboard=60, pago=70, boton-cantidad=70
+
 function App() {
   // 1. --- TODOS LOS HOOKS PRIMERO (SIEMPRE ARRIBA) ---
   const {
@@ -156,7 +158,7 @@ function App() {
               onClick={() => setMostrarDashboard(true)}
               className="flex items-center gap-1 sm:gap-2 bg-gray-100 text-facilito-azul px-2 py-1.5 sm:px-3 sm:py-2 rounded-full font-bold hover:bg-blue-100 active:scale-95 transition-transform"
             >
-              <Store size={18} className="sm:w-5 sm:h-5" />
+              <Store size={20} />
               {ventas.length > 0 && (
                 <span className="bg-facilito-rojo text-white text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full">
                   {ventas.length}
@@ -169,7 +171,7 @@ function App() {
               onClick={() => setMostrarInventario(true)}
               className="p-2 text-gray-500 hover:text-facilito-azul bg-gray-50 hover:bg-blue-50 rounded-full transition-colors active:scale-95"
             >
-              <Settings size={22} className="sm:w-6 sm:h-6" />
+              <Settings size={20} />
             </button>
 
             {/* Botón Salir (Logout) */}
@@ -180,7 +182,7 @@ function App() {
               className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors active:scale-95"
               title="Bloquear Terminal"
             >
-              <LogOut size={22} className="sm:w-6 sm:h-6" />
+              <LogOut size={20} />
             </button>
           </div>
         </header>
@@ -189,7 +191,7 @@ function App() {
         <div className="p-3 bg-white border-b border-gray-200 shadow-sm z-10">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${busqueda ? 'text-facilito-azul' : 'text-gray-400'}`} size={20} />
+              <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${busqueda ? 'text-facilito-azul' : 'text-gray-400'}`} size={20} strokeWidth={2.5} />
               <input
                 ref={inputBusquedaRef}
                 type="text"
@@ -209,7 +211,7 @@ function App() {
               onClick={() => setMostrarScanner(true)}
               className="bg-facilito-azul text-white p-3 rounded-xl shadow-md hover:bg-blue-800"
             >
-              <ScanBarcode size={24} />
+              <ScanBarcode size={20} />
             </button>
           </div>
         </div>
@@ -217,9 +219,12 @@ function App() {
         {/* GRID PRODUCTOS */}
         <main className="flex-1 overflow-y-auto p-2 bg-gray-100 pb-24 lg:pb-4">
           {productosFiltrados.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-gray-400 opacity-60 mt-10">
-              <Search size={48} className="mb-2" />
-              <p className="text-lg font-bold">Sin resultados</p>
+            <div className="flex flex-col items-center justify-center h-40 text-gray-400 mt-10 select-none">
+              <div className="bg-gray-200 rounded-full p-4 mb-3">
+                <Search size={28} className="text-gray-400" />
+              </div>
+              <p className="font-bold text-gray-500 text-sm">Sin resultados para "{busqueda}"</p>
+              <p className="text-gray-400 text-xs mt-1">Intenta con otro nombre o código</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 lg:gap-4">
@@ -246,7 +251,7 @@ function App() {
 
         <div className="flex flex-col">
           <span className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1">
-            {ticketMovilAbierto ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            {ticketMovilAbierto ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
             {carrito.length} Artículos
           </span>
           <span className="text-2xl font-black text-facilito-verde">${obtenerTotal().toFixed(2)}</span>
@@ -262,7 +267,7 @@ function App() {
 
       {/* --- MODAL TICKET MÓVIL (CAJÓN) --- */}
       {ticketMovilAbierto && (
-        <div className="lg:hidden fixed inset-0 z-40 flex flex-col justify-end bg-black/50 backdrop-blur-sm animate-fade-in">
+        <div className="lg:hidden fixed inset-0 z-[50] flex flex-col justify-end bg-black/50 backdrop-blur-sm animate-fade-in">
           <div className="flex-1" onClick={() => setTicketMovilAbierto(false)}></div>
 
           <div className="bg-white rounded-t-3xl h-[85vh] shadow-2xl overflow-hidden flex flex-col animate-slide-up">

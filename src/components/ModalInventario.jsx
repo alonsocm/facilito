@@ -70,13 +70,13 @@ export const ModalInventario = ({ cerrarModal }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden animate-fade-in relative">
 
                 {/* Cabecera */}
                 <div className={`p-6 flex justify-between items-center text-white shrink-0 transition-colors ${productoAEditar ? 'bg-orange-600' : 'bg-facilito-negro'}`}>
                     <div className="flex items-center gap-3">
-                        {productoAEditar ? <Edit2 size={32} /> : <Package size={32} />}
+                        {productoAEditar ? <Edit2 size={24} /> : <Package size={24} />}
                         <div>
                             <h2 className="text-2xl font-bold">
                                 {productoAEditar ? 'Editar Producto' : 'Inventario General'}
@@ -87,7 +87,7 @@ export const ModalInventario = ({ cerrarModal }) => {
                         </div>
                     </div>
                     <button onClick={cerrarModal} className="bg-white/20 p-2 rounded-full hover:bg-white/40">
-                        <X size={28} />
+                        <X size={20} />
                     </button>
                 </div>
 
@@ -161,7 +161,7 @@ export const ModalInventario = ({ cerrarModal }) => {
                                         onClick={() => setMostrarScanner(true)}
                                         className="bg-facilito-azul text-white p-2 rounded-lg hover:bg-blue-800"
                                     >
-                                        <ScanBarcode size={24} />
+                                        <ScanBarcode size={20} />
                                     </button>
                                 </div>
                             </div>
@@ -218,7 +218,7 @@ export const ModalInventario = ({ cerrarModal }) => {
                                                 onClick={() => setProductoAEditar(p)}
                                                 className="bg-blue-50 text-blue-600 p-2 rounded-lg hover:bg-blue-100 hover:scale-110 transition-transform"
                                             >
-                                                <Edit2 size={20} />
+                                                <Edit2 size={16} />
                                             </button>
                                             <button
                                                 onClick={() => {
@@ -226,7 +226,7 @@ export const ModalInventario = ({ cerrarModal }) => {
                                                 }}
                                                 className="bg-red-50 text-red-400 p-2 rounded-lg hover:bg-red-100 hover:text-red-600 transition-colors"
                                             >
-                                                <Trash2 size={20} />
+                                                <Trash2 size={16} />
                                             </button>
                                         </div>
                                     </div>

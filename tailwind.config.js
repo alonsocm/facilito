@@ -15,11 +15,16 @@ export default {
                 'facilito-negro': '#111827', // Casi negro para texto principal
             },
             fontSize: {
-                // Sobreescribimos tamaños para asegurar legibilidad
-                'base': '1.25rem',    // 20px (Texto normal)
-                'lg': '1.5rem',       // 24px (Subtítulos)
-                'xl': '2rem',         // 32px (Títulos grandes)
-                '2xl': '3rem',        // 48px (Precios gigantes)
+                // Tamaños personalizados sin sobrescribir la escala base de Tailwind
+                // Usamos nombres propios para evitar colisiones con text-lg, text-xl, etc.
+                'pos-sm': '0.875rem',   // 14px (etiquetas, badges)
+                'pos-base': '1rem',     // 16px (texto normal)
+                'pos-md': '1.125rem',   // 18px (subtítulos)
+                'pos-lg': '1.25rem',    // 20px (títulos secundarios)
+                'pos-xl': '1.5rem',     // 24px (títulos principales)
+                'pos-price': '2rem',    // 32px (precios)
+                'pos-total': '2.5rem',  // 40px (totales)
+                'pos-giant': '3rem',    // 48px (cambio/monto en pago)
             }
         },
     },

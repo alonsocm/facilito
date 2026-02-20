@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Check, AlertTriangle } from 'lucide-react';
 
 export const BotonProducto = ({ producto, alHacerClick }) => {
     const [presionando, setPresionando] = useState(false);
@@ -7,6 +7,8 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
 
     const [mostrarInputCantidad, setMostrarInputCantidad] = useState(false);
     const [cantidadManual, setCantidadManual] = useState(1);
+    const [mostrarCheck, setMostrarCheck] = useState(false);
+    const checkTimerRef = useRef(null);
 
     // --- LÓGICA DE PRESIÓN ---
     const iniciarPresion = () => {
@@ -34,6 +36,7 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
         if (timerRef.current && !mostrarInputCantidad) {
             clearTimeout(timerRef.current);
             alHacerClick(1);
+            mostrarFeedback();
         }
         setPresionando(false);
     };
@@ -43,12 +46,24 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
         setPresionando(false);
     };
 
+    const mostrarFeedback = () => {
+        if (checkTimerRef.current) clearTimeout(checkTimerRef.current);
+        setMostrarCheck(true);
+        checkTimerRef.current = setTimeout(() => setMostrarCheck(false), 900);
+    };
+
     const confirmarCantidad = () => {
-        if (cantidadManual > 0) alHacerClick(parseInt(cantidadManual));
+        if (cantidadManual > 0) {
+            alHacerClick(parseInt(cantidadManual));
+            mostrarFeedback();
+        }
         setMostrarInputCantidad(false);
         setCantidadManual(1);
     };
     // -------------------------
+
+    const stockBajo = !producto.esGranel && producto.stock !== undefined && producto.stock <= 5 && producto.stock > 0;
+    const sinStock = !producto.esGranel && producto.stock !== undefined && producto.stock === 0;
 
     return (
         <>
@@ -69,7 +84,10 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
                 className={`
                 relative bg-white p-3 sm:p-4 rounded-2xl shadow-sm border-2 transition-all duration-200
                 flex flex-col items-start justify-between h-full group overflow-hidden select-none w-full
-                ${presionando ? 'scale-95 border-facilito-azul bg-blue-50' : 'border-transparent hover:border-blue-200 hover:shadow-md'}
+                ${presionando ? 'scale-95 border-facilito-azul bg-blue-50'
+                    : stockBajo ? 'border-orange-200 hover:border-orange-300 hover:shadow-md'
+                    : sinStock ? 'border-red-200 opacity-60'
+                    : 'border-transparent hover:border-blue-200 hover:shadow-md'}
                 active:scale-95 touch-manipulation cursor-pointer
             `}
                 style={{ WebkitTapHighlightColor: 'transparent' }} // Quita el parpadeo azul en Android/iOS
@@ -89,6 +107,17 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
                                 KG / $
                             </span>
                         )}
+                        {stockBajo && (
+                            <span className="absolute top-2 right-2 bg-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm flex items-center gap-0.5">
+                                <AlertTriangle size={9} strokeWidth={3} />
+                                {producto.stock}
+                            </span>
+                        )}
+                        {sinStock && (
+                            <div className="absolute inset-0 bg-gray-900/20 rounded-xl flex items-center justify-center">
+                                <span className="bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-full shadow">AGOTADO</span>
+                            </div>
+                        )}
                     </div>
 
                     <p className="font-bold text-facilito-negro leading-tight line-clamp-2 text-left text-sm sm:text-base">
@@ -100,11 +129,15 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
                     ${producto.precio}
                 </p>
 
-                <div className="absolute bottom-3 right-3 bg-blue-100 text-facilito-azul p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity scale-0 group-hover:scale-100 duration-200">
-                    <Plus size={18} />
+                {/* Badge hover normal */}
+                <div className={`absolute bottom-3 right-3 p-1.5 rounded-full transition-all duration-200
+                    ${mostrarCheck
+                        ? 'bg-facilito-verde text-white scale-110 opacity-100'
+                        : 'bg-blue-100 text-facilito-azul opacity-0 group-hover:opacity-100 scale-0 group-hover:scale-100'
+                    }`}>
+                    {mostrarCheck ? <Check size={16} strokeWidth={3} /> : <Plus size={16} />}
                 </div>
             </button>
-
             {mostrarInputCantidad && (
                 <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                     <div className="bg-white p-6 rounded-3xl shadow-2xl w-72 flex flex-col items-center animate-slide-up">

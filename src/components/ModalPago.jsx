@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Banknote, Coins, CheckCircle2, Eraser } from 'lucide-react';
+import { X, Banknote, Coins, CheckCircle2, Eraser, PartyPopper } from 'lucide-react';
 
 export const ModalPago = ({ total, cerrarModal, completarVenta }) => {
     const [efectivo, setEfectivo] = useState('');
@@ -118,20 +118,34 @@ export const ModalPago = ({ total, cerrarModal, completarVenta }) => {
                             ))}
                         </div>
 
-                        {/* INFO CAMBIO (Visualmente Impactante) */}
+                        {/* INFO CAMBIO */}
                         <div className={`
-                            p-5 rounded-2xl border-2 flex flex-col items-center justify-center transition-all duration-300
-                            ${esSuficiente ? 'bg-green-100 border-green-300 scale-105 shadow-xl' : 'bg-gray-50 border-gray-200'}
+                            p-5 rounded-2xl border-2 flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden
+                            ${esSuficiente ? 'bg-green-100 border-green-400 scale-105 shadow-xl shadow-green-200' : 'bg-gray-50 border-gray-200'}
                         `}>
-                            <div className="flex items-center gap-2 mb-1">
-                                {esSuficiente ? <Coins className="text-green-600" size={20} /> : null}
+                            {esSuficiente && (
+                                <div className="absolute inset-0 pointer-events-none">
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-green-200/50 rounded-full blur-2xl" />
+                                    <div className="absolute bottom-0 left-0 w-16 h-16 bg-green-300/30 rounded-full blur-xl" />
+                                </div>
+                            )}
+                            <div className="flex items-center gap-2 mb-1 relative z-10">
+                                {esSuficiente
+                                    ? <CheckCircle2 className="text-green-600" size={20} strokeWidth={2.5} />
+                                    : null
+                                }
                                 <span className={`text-sm font-black uppercase tracking-widest ${esSuficiente ? 'text-green-700' : 'text-gray-400'}`}>
                                     {esSuficiente ? 'Entregar Cambio' : 'Falta por pagar'}
                                 </span>
                             </div>
-                            <span className={`text-5xl font-black ${esSuficiente ? 'text-green-700' : 'text-gray-300'}`}>
+                            <span className={`text-5xl font-black relative z-10 ${esSuficiente ? 'text-green-700' : 'text-gray-300'}`}>
                                 ${esSuficiente ? cambio.toFixed(2) : falta.toFixed(2)}
                             </span>
+                            {esSuficiente && cambio === 0 && (
+                                <span className="mt-2 text-xs font-bold text-green-600 bg-green-200 px-3 py-0.5 rounded-full relative z-10">
+                                    Pago exacto ✓
+                                </span>
+                            )}
                         </div>
 
                         {/* BOTÓN FINAL */}
@@ -140,10 +154,10 @@ export const ModalPago = ({ total, cerrarModal, completarVenta }) => {
                             disabled={!esSuficiente}
                             className={`w-full py-4 rounded-2xl font-black text-xl shadow-xl transition-all flex items-center justify-center gap-2
                             ${esSuficiente
-                                    ? 'bg-facilito-azul text-white hover:bg-blue-700 hover:scale-[1.02] active:scale-95'
+                                    ? 'bg-facilito-verde text-white hover:bg-green-600 hover:scale-[1.02] active:scale-95 shadow-green-500/30'
                                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                         >
-                            <CheckCircle2 size={24} />
+                            <CheckCircle2 size={22} strokeWidth={2.5} />
                             {esSuficiente ? 'FINALIZAR VENTA' : 'Complete el monto'}
                         </button>
                     </form>

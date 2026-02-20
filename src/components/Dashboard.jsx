@@ -72,40 +72,43 @@ export const Dashboard = ({ cerrarModal }) => {
     }, [ventas, productos]);
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
             <div className="bg-gray-100 rounded-3xl shadow-2xl w-full max-w-5xl h-[90vh] overflow-y-auto animate-fade-in relative flex flex-col">
 
                 {/* HEADER */}
                 <div className="bg-facilito-azul p-6 text-white flex justify-between items-center sticky top-0 z-10 shadow-md">
                     <div>
                         <h2 className="text-2xl font-black flex items-center gap-2">
-                            <TrendingUp /> REPORTE FINANCIERO
+                            <TrendingUp size={24} /> REPORTE FINANCIERO
                         </h2>
                         <p className="text-blue-200 text-sm">Análisis de rentabilidad y ventas</p>
                     </div>
                     <button onClick={cerrarModal} className="bg-white/20 p-2 rounded-full hover:bg-white/40 transition-colors">
-                        <X size={24} />
+                        <X size={20} />
                     </button>
                 </div>
 
                 {/* CONTENIDO */}
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-8">
 
-                    {/* TARJETAS DE KPIs (Ahora son 3 principales) */}
+                    {/* TARJETAS DE KPIs */}
+                    <div>
+                        <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Resumen del día</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                         {/* 1. VENTAS BRUTAS */}
-                        <div className="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-blue-500 relative overflow-hidden">
+                        <div className="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-facilito-azul relative overflow-hidden">
                             <div className="relative z-10">
                                 <p className="text-gray-400 font-bold text-xs uppercase tracking-wider">Ventas de Hoy</p>
                                 <h3 className="text-3xl font-black text-facilito-negro mt-1">
                                     ${datosProcesados.ventaTotal.toFixed(2)}
                                 </h3>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    {datosProcesados.ticketsHoy} transacciones
+                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                                    <span className="inline-block bg-blue-50 text-facilito-azul font-black px-2 py-0.5 rounded-lg text-xs">{datosProcesados.ticketsHoy}</span>
+                                    transacciones
                                 </p>
                             </div>
-                            <DollarSign className="absolute -bottom-4 -right-4 text-blue-50 w-24 h-24" />
+                            <DollarSign className="absolute -bottom-4 -right-4 text-blue-100 w-24 h-24 opacity-40" />
                         </div>
 
                         {/* 2. UTILIDAD (NUEVO) */}
@@ -123,7 +126,7 @@ export const Dashboard = ({ cerrarModal }) => {
                         </div>
 
                         {/* 3. PRODUCTO ESTRELLA */}
-                        <div className="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-orange-400 relative overflow-hidden">
+                        <div className="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-facilito-rojo relative overflow-hidden">
                             <div className="relative z-10">
                                 <p className="text-gray-400 font-bold text-xs uppercase tracking-wider">Más Vendido</p>
                                 <h3 className="text-2xl font-black text-facilito-negro mt-1 truncate" title={datosProcesados.productoEstrella?.[0]}>
@@ -133,18 +136,21 @@ export const Dashboard = ({ cerrarModal }) => {
                                     {datosProcesados.productoEstrella ? `${datosProcesados.productoEstrella[1]} unidades` : 'Sin datos'}
                                 </p>
                             </div>
-                            <ShoppingBag className="absolute -bottom-4 -right-4 text-orange-50 w-24 h-24" />
+                            <ShoppingBag className="absolute -bottom-4 -right-4 text-red-100 w-24 h-24 opacity-40" />
                         </div>
 
                     </div>
+                    </div>
 
                     {/* SECCIÓN INFERIOR: GRÁFICA Y DETALLES */}
+                    <div>
+                        <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Tendencia semanal</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                         {/* GRÁFICA (Ocupa 2/3) */}
                         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm h-80 flex flex-col">
                             <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                                <Calendar size={20} className="text-gray-400" />
+                                <Calendar size={16} className="text-gray-400" />
                                 Comportamiento Semanal
                             </h3>
                             <div className="flex-1 w-full">
@@ -189,6 +195,7 @@ export const Dashboard = ({ cerrarModal }) => {
                             <div className="absolute bottom-0 left-0 w-24 h-24 bg-facilito-verde/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
                         </div>
 
+                    </div>
                     </div>
                 </div>
             </div>

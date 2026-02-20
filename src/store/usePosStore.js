@@ -2,7 +2,7 @@ import { toast } from 'react-hot-toast';
 import { create } from 'zustand';
 // CORRECCIÓN 1: Asegúrate de apuntar al archivo correcto (usualmente es /config)
 import { db } from '../firebase';
-import { collection, doc, setDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, setDoc, writeBatch, updateDoc } from 'firebase/firestore';
 
 export const usePosStore = create((set, get) => ({
 
@@ -203,5 +203,42 @@ export const usePosStore = create((set, get) => ({
             return true;
         }
         return false;
-    }
+    },
+
+    // 5. REABASTECIMIENTO RÁPIDO
+    aumentarStock: async (id, cantidadAgregada) => {
+        const { productos } = get();
+        try {
+            // Referencia
+            const productoRef = doc(db, "productos", id);
+
+            // 1. Buscamos el stock actual en nuestra lista local para sumar
+            const productoActual = productos.find(p => p.id === id);
+            const stockAnterior = productoActual ? parseFloat(productoActual.stock || 0) : 0;
+            const nuevoStock = stockAnterior + parseFloat(cantidadAgregada);
+
+            // 2. Actualizamos en Firebase (Funciona Offline)
+            await updateDoc(productoRef, {
+                stock: nuevoStock
+            });
+
+            // 3. Actualizamos estado Local (Visual) inmediatamente
+            const productosActualizados = productos.map(p =>
+                p.id === id ? { ...p, stock: nuevoStock } : p
+            );
+
+            set({ productos: productosActualizados });
+
+            toast.success(`Stock actualizado: ${nuevoStock} unidades`, {
+                icon: '🚛',
+                style: { border: '2px solid #f97316', color: '#ea580c' } // Naranja
+            });
+            return true;
+
+        } catch (error) {
+            console.error("Error al reabastecer:", error);
+            toast.error("Error al actualizar stock");
+            return false;
+        }
+    },
 }));

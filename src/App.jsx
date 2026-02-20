@@ -14,9 +14,10 @@ import { ModalGranel } from './components/ModalGranel';
 import { EscanerCamara } from './components/EscanerCamara';
 import { TicketImprimible } from './components/TicketImprimible';
 import { PantallaBloqueo } from './components/PantallaBloqueo'; // <--- IMPORTAR
+import { ModalReabastecer } from './components/ModalReabastecer';
 
 // --- ICONOS ---
-import { Settings, Store, Search, X, ScanBarcode, ChevronUp, ChevronDown, ShoppingBag, LogOut } from 'lucide-react';
+import { Settings, Store, Search, X, ScanBarcode, ChevronUp, ChevronDown, ShoppingBag, LogOut, PackagePlus } from 'lucide-react';
 
 // z-index scale: ticket-drawer=50, inventario=60, dashboard=60, pago=70, boton-cantidad=70
 
@@ -41,6 +42,9 @@ function App() {
   const [mostrarScanner, setMostrarScanner] = useState(false);
   const [ticketMovilAbierto, setTicketMovilAbierto] = useState(false);
   const [busqueda, setBusqueda] = useState("");
+  const [modoRecepcion, setModoRecepcion] = useState(false); // Switch de modo
+  const [productoAReabastecer, setProductoAReabastecer] = useState(null); // Modal
+  const { aumentarStock } = usePosStore(); // Importa la función
   const inputBusquedaRef = useRef(null);
   const ticketRef = useRef();
 
@@ -109,17 +113,23 @@ function App() {
     });
   };
 
-  const manejarSeleccionProducto = (producto, cantidad = 1) => { // <--- ACEPTAR CANTIDAD
+  const manejarSeleccionProducto = (producto, cantidad = 1) => {
+    // A. SI ESTAMOS EN MODO RECEPCIÓN -> ABRIR MODAL STOCK
+    if (modoRecepcion) {
+      setProductoAReabastecer(producto);
+      return; // Detenemos aquí para no vender
+    }
+
+    // B. SI ES A GRANEL (Lógica existente)
     if (producto.esGranel) {
       setProductoAGranel(producto);
-    } else {
-      agregarProducto(producto, cantidad); // <--- USAR LA CANTIDAD QUE RECIBIMOS
-      setBusqueda('');
-      inputBusquedaRef.current?.focus();
-
-      // Opcional: Feedback visual extra
-      // toast.success(`Agregados ${cantidad} de ${producto.nombre}`);
+      return;
     }
+
+    // C. MODO VENTA NORMAL (Lógica existente)
+    agregarProducto(producto, cantidad);
+    setBusqueda('');
+    inputBusquedaRef.current?.focus();
   };
 
   const productosFiltrados = productos.filter(producto => {
@@ -174,6 +184,18 @@ function App() {
               <Settings size={20} />
             </button>
 
+            <button
+              onClick={() => setModoRecepcion(!modoRecepcion)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all border-2
+                ${modoRecepcion
+                  ? 'bg-orange-500 text-white border-orange-600 shadow-orange-500/50 shadow-lg scale-105 ring-2 ring-orange-300'
+                  : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}
+                `}
+            >
+              <PackagePlus size={20} />
+              {modoRecepcion ? 'MODO RECEPCIÓN ACTIVO' : 'Recepción'}
+            </button>
+
             {/* Botón Salir (Logout) */}
             <button
               onClick={() => {
@@ -214,10 +236,9 @@ function App() {
               <ScanBarcode size={20} />
             </button>
           </div>
-        </div>
 
         {/* GRID PRODUCTOS */}
-        <main className="flex-1 overflow-y-auto p-2 bg-gray-100 pb-24 lg:pb-4">
+        <main className={`flex-1 overflow-y-auto p-2 pb-24 lg:pb-4 transition-colors duration-300 ${modoRecepcion ? 'bg-orange-50 ring-4 ring-inset ring-orange-400' : 'bg-gray-100'}`}>
           {productosFiltrados.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-gray-400 mt-10 select-none">
               <div className="bg-gray-200 rounded-full p-4 mb-3">
@@ -232,7 +253,7 @@ function App() {
                 <BotonProducto
                   key={producto.id}
                   producto={producto}
-                  alHacerClick={(cantidad) => manejarSeleccionProducto(producto, cantidad)} // <--- Pasamos la cantidad
+                  alHacerClick={(cantidad) => manejarSeleccionProducto(producto, cantidad)}
                 />
               ))}
             </div>
@@ -270,60 +291,80 @@ function App() {
         <div className="lg:hidden fixed inset-0 z-[50] flex flex-col justify-end bg-black/50 backdrop-blur-sm animate-fade-in">
           <div className="flex-1" onClick={() => setTicketMovilAbierto(false)}></div>
 
-          <div className="bg-white rounded-t-3xl h-[85vh] shadow-2xl overflow-hidden flex flex-col animate-slide-up">
-            <div className="w-full flex justify-center pt-3 pb-1" onClick={() => setTicketMovilAbierto(false)}>
-              <div className="w-16 h-1.5 bg-gray-300 rounded-full"></div>
-            </div>
+            <div className="bg-white rounded-t-3xl h-[85vh] shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+              <div className="w-full flex justify-center pt-3 pb-1" onClick={() => setTicketMovilAbierto(false)}>
+                <div className="w-16 h-1.5 bg-gray-300 rounded-full"></div>
+              </div>
 
-            <div className="flex-1 overflow-hidden relative">
-              <TicketVenta alPresionarCobrar={() => setMostrarPago(true)} />
+              <div className="flex-1 overflow-hidden relative">
+                <TicketVenta alPresionarCobrar={() => setMostrarPago(true)} />
 
-              <button
-                onClick={() => setTicketMovilAbierto(false)}
-                className="absolute top-2 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-red-100 hover:text-red-500"
-              >
-                <X size={20} />
-              </button>
+                <button
+                  onClick={() => setTicketMovilAbierto(false)}
+                  className="absolute top-2 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-red-100 hover:text-red-500"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* --- MODALES --- */}
       {mostrarPago && <ModalPago total={obtenerTotal()} cerrarModal={() => setMostrarPago(false)} completarVenta={manejarCobro} />}
       {mostrarInventario && <ModalInventario cerrarModal={() => setMostrarInventario(false)} />}
       {mostrarDashboard && <Dashboard cerrarModal={() => setMostrarDashboard(false)} />}
 
-      {productoAGranel && (
-        <ModalGranel
-          producto={productoAGranel}
-          cerrarModal={() => setProductoAGranel(null)}
-          confirmarAgregar={(cantidad) => {
-            agregarProducto(productoAGranel, cantidad);
-            setProductoAGranel(null);
-            setBusqueda('');
-            inputBusquedaRef.current?.focus();
-          }}
-        />
-      )}
+      {
+        productoAGranel && (
+          <ModalGranel
+            producto={productoAGranel}
+            cerrarModal={() => setProductoAGranel(null)}
+            confirmarAgregar={(cantidad) => {
+              agregarProducto(productoAGranel, cantidad);
+              setProductoAGranel(null);
+              setBusqueda('');
+              inputBusquedaRef.current?.focus();
+            }}
+          />
+        )
+      }
 
-      {mostrarScanner && (
-        <EscanerCamara
-          cerrar={() => setMostrarScanner(false)}
-          onScan={(codigo) => {
-            setMostrarScanner(false);
-            const encontrado = buscarYAgregar(codigo);
-            if (!encontrado) {
-              setBusqueda(codigo);
-              toast.error('Producto no encontrado en catálogo');
-            }
-            else {
-              // Opcional: Sonido o aviso de éxito
-              toast.success('Producto agregado');
-            }
-          }}
-        />
-      )}
+      {
+        mostrarScanner && (
+          <EscanerCamara
+            cerrar={() => setMostrarScanner(false)}
+            onScan={(codigo) => {
+              setMostrarScanner(false);
+              const encontrado = buscarYAgregar(codigo);
+              if (!encontrado) {
+                setBusqueda(codigo);
+                toast.error('Producto no encontrado en catálogo');
+              }
+              else {
+                // Opcional: Sonido o aviso de éxito
+                toast.success('Producto agregado');
+              }
+            }}
+          />
+        )
+      }
+
+      {/* ... Otros modales ... */}
+
+      {
+        productoAReabastecer && (
+          <ModalReabastecer
+            producto={productoAReabastecer}
+            cerrar={() => setProductoAReabastecer(null)}
+            confirmar={(id, cantidad) => {
+              aumentarStock(id, cantidad);
+              setProductoAReabastecer(null);
+            }}
+          />
+        )
+      }
 
       {/* TICKET IMPRIMIBLE */}
       <div style={{ display: 'none' }}>
@@ -344,7 +385,7 @@ function App() {
         }}
       />
 
-    </div>
+    </div >
   );
 }
 

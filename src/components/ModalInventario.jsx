@@ -71,17 +71,17 @@ export const ModalInventario = ({ cerrarModal }) => {
 
     return (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden animate-fade-in relative">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[90vh] md:h-[90vh] flex flex-col overflow-hidden animate-fade-in relative">
 
                 {/* Cabecera */}
-                <div className={`p-6 flex justify-between items-center text-white shrink-0 transition-colors ${productoAEditar ? 'bg-orange-600' : 'bg-facilito-negro'}`}>
-                    <div className="flex items-center gap-3">
-                        {productoAEditar ? <Edit2 size={24} /> : <Package size={24} />}
-                        <div>
-                            <h2 className="text-2xl font-bold">
+                <div className={`p-4 md:p-6 flex justify-between items-center text-white shrink-0 transition-colors ${productoAEditar ? 'bg-orange-600' : 'bg-facilito-negro'}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                        {productoAEditar ? <Edit2 size={24} className="shrink-0" /> : <Package size={24} className="shrink-0" />}
+                        <div className="min-w-0">
+                            <h2 className="text-lg md:text-2xl font-bold truncate">
                                 {productoAEditar ? 'Editar Producto' : 'Inventario General'}
                             </h2>
-                            <p className="text-sm opacity-80">
+                            <p className="text-xs md:text-sm opacity-80 truncate">
                                 {productoAEditar ? `Modificando: ${productoAEditar.nombre}` : 'Agrega o administra tus productos'}
                             </p>
                         </div>
@@ -91,10 +91,10 @@ export const ModalInventario = ({ cerrarModal }) => {
                     </button>
                 </div>
 
-                <div className="flex flex-1 overflow-hidden">
+                <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
 
                     {/* COLUMNA IZQUIERDA: FORMULARIO */}
-                    <div className="w-1/3 bg-gray-50 p-6 border-r border-gray-200 overflow-y-auto">
+                    <div className="w-full md:w-2/5 lg:w-1/3 bg-gray-50 p-4 md:p-6 border-b md:border-b-0 md:border-r border-gray-200 overflow-y-auto shrink-0">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className={`text-xl font-bold ${productoAEditar ? 'text-orange-600' : 'text-facilito-azul'}`}>
                                 {productoAEditar ? 'Datos del Producto' : 'Nuevo Ingreso'}
@@ -180,7 +180,7 @@ export const ModalInventario = ({ cerrarModal }) => {
                     </div>
 
                     {/* COLUMNA DERECHA: LISTA */}
-                    <div className="flex-1 p-6 overflow-y-auto bg-white">
+                    <div className="flex-1 p-4 md:p-6 overflow-y-auto bg-white">
                         <h3 className="text-lg font-bold text-gray-400 mb-4 border-b pb-2 uppercase tracking-wide">
                             Catálogo ({productos.length})
                         </h3>

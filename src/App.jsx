@@ -186,14 +186,14 @@ function App() {
 
             <button
               onClick={() => setModoRecepcion(!modoRecepcion)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all border-2
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-xl font-bold transition-all border-2
                 ${modoRecepcion
                   ? 'bg-orange-500 text-white border-orange-600 shadow-orange-500/50 shadow-lg scale-105 ring-2 ring-orange-300'
                   : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}
                 `}
             >
               <PackagePlus size={20} />
-              {modoRecepcion ? 'MODO RECEPCIÓN ACTIVO' : 'Recepción'}
+              <span className="hidden sm:inline">{modoRecepcion ? 'RECEPCIÓN ACTIVO' : 'Recepción'}</span>
             </button>
 
             {/* Botón Salir (Logout) */}

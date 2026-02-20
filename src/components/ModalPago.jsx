@@ -46,7 +46,7 @@ export const ModalPago = ({ total, cerrarModal, completarVenta }) => {
                     {/* TOTAL A PAGAR (Más compacto para dar espacio al Cambio) */}
                     <div className="text-center mb-6">
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Total a Pagar</p>
-                        <p className="text-5xl font-black text-facilito-negro tracking-tight">
+                        <p className="text-3xl sm:text-5xl font-black text-facilito-negro tracking-tight">
                             ${total.toFixed(2)}
                         </p>
                     </div>
@@ -66,7 +66,7 @@ export const ModalPago = ({ total, cerrarModal, completarVenta }) => {
                                     onChange={(e) => setEfectivo(e.target.value)}
                                     // MEJORA: Al hacer clic, selecciona todo para corregir rápido
                                     onClick={(e) => e.target.select()}
-                                    className={`w-full pl-10 pr-12 py-4 text-4xl font-black border-4 rounded-2xl outline-none transition-all text-center
+                                    className={`w-full pl-10 pr-12 py-3 sm:py-4 text-3xl sm:text-4xl font-black border-4 rounded-2xl outline-none transition-all text-center
                                     ${esSuficiente
                                             ? 'border-green-500 bg-green-50 text-green-800 shadow-lg shadow-green-100'
                                             : 'border-gray-200 focus:border-facilito-azul focus:ring-4 focus:ring-blue-50 text-gray-700'
@@ -91,7 +91,7 @@ export const ModalPago = ({ total, cerrarModal, completarVenta }) => {
                         </div>
 
                         {/* BILLETES RÁPIDOS */}
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             <button
                                 type="button"
                                 onClick={() => setEfectivo(total.toFixed(2))}
@@ -138,7 +138,7 @@ export const ModalPago = ({ total, cerrarModal, completarVenta }) => {
                                     {esSuficiente ? 'Entregar Cambio' : 'Falta por pagar'}
                                 </span>
                             </div>
-                            <span className={`text-5xl font-black relative z-10 ${esSuficiente ? 'text-green-700' : 'text-gray-300'}`}>
+                            <span className={`text-3xl sm:text-5xl font-black relative z-10 ${esSuficiente ? 'text-green-700' : 'text-gray-300'}`}>
                                 ${esSuficiente ? cambio.toFixed(2) : falta.toFixed(2)}
                             </span>
                             {esSuficiente && cambio === 0 && (
@@ -152,7 +152,7 @@ export const ModalPago = ({ total, cerrarModal, completarVenta }) => {
                         <button
                             type="submit"
                             disabled={!esSuficiente}
-                            className={`w-full py-4 rounded-2xl font-black text-xl shadow-xl transition-all flex items-center justify-center gap-2
+                            className={`w-full py-3 sm:py-4 rounded-2xl font-black text-lg sm:text-xl shadow-xl transition-all flex items-center justify-center gap-2
                             ${esSuficiente
                                     ? 'bg-facilito-verde text-white hover:bg-green-600 hover:scale-[1.02] active:scale-95 shadow-green-500/30'
                                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}

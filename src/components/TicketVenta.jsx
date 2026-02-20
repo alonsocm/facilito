@@ -79,7 +79,7 @@ export const TicketVenta = ({ alPresionarCobrar }) => {
             <div className="p-4 bg-white border-t border-gray-200 shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-10">
                 <div className="flex justify-between items-end mb-4">
                     <span className="text-gray-400 font-bold text-sm">TOTAL A PAGAR</span>
-                    <span className="text-4xl font-black text-facilito-negro tracking-tight">
+                    <span className="text-2xl sm:text-4xl font-black text-facilito-negro tracking-tight">
                         ${total.toFixed(2)}
                     </span>
                 </div>

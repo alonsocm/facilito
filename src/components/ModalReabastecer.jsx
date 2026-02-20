@@ -24,7 +24,7 @@ export const ModalReabastecer = ({ producto, cerrar, confirmar }) => {
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
 
                 {/* HEADER NARANJA (Diferente al azul de ventas para no confundir) */}
-                <div className="bg-orange-500 p-6 flex justify-between items-center text-white">
+                <div className="bg-orange-500 p-4 sm:p-6 flex justify-between items-center text-white">
                     <h2 className="text-xl font-bold flex items-center gap-2">
                         <PackagePlus /> Recepción de Mercancía
                     </h2>
@@ -38,14 +38,14 @@ export const ModalReabastecer = ({ producto, cerrar, confirmar }) => {
                     {/* NOMBRE DEL PRODUCTO */}
                     <div className="text-center">
                         <p className="text-gray-400 text-xs font-bold uppercase">Producto</p>
-                        <h3 className="text-2xl font-black text-gray-800 line-clamp-2">{producto.nombre}</h3>
+                        <h3 className="text-xl sm:text-2xl font-black text-gray-800 line-clamp-2">{producto.nombre}</h3>
                     </div>
 
                     {/* VISUALIZACIÓN MATEMÁTICA */}
                     <div className="flex items-center justify-center gap-4 text-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
                         <div>
                             <p className="text-xs text-gray-500 font-bold mb-1">ACTUAL</p>
-                            <p className="text-3xl font-bold text-gray-400">{stockActual}</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-gray-400">{stockActual}</p>
                         </div>
                         <div className="text-orange-500 pt-4">
                             <PackagePlus size={24} />
@@ -53,14 +53,14 @@ export const ModalReabastecer = ({ producto, cerrar, confirmar }) => {
                         <div>
                             <p className="text-xs text-orange-600 font-bold mb-1">ENTRADA</p>
                             {/* El valor que estamos escribiendo */}
-                            <p className="text-3xl font-bold text-orange-600">+{ingreso || 0}</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-orange-600">+{ingreso || 0}</p>
                         </div>
                         <div className="text-gray-300 pt-4">
                             <ArrowRight size={24} />
                         </div>
                         <div>
                             <p className="text-xs text-green-600 font-bold mb-1">FINAL</p>
-                            <p className="text-3xl font-black text-green-600">{stockFinal}</p>
+                            <p className="text-2xl sm:text-3xl font-black text-green-600">{stockFinal}</p>
                         </div>
                     </div>
 

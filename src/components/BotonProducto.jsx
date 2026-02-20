@@ -140,7 +140,7 @@ export const BotonProducto = ({ producto, alHacerClick }) => {
             </button>
             {mostrarInputCantidad && (
                 <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white p-6 rounded-3xl shadow-2xl w-72 flex flex-col items-center animate-slide-up">
+                    <div className="bg-white p-5 sm:p-6 rounded-3xl shadow-2xl w-full max-w-xs flex flex-col items-center animate-slide-up">
                         <h3 className="font-bold text-lg mb-4 text-center text-gray-700 leading-tight">
                             Cantidad para <br />
                             <span className="text-facilito-azul text-xl">{producto.nombre}</span>

@@ -89,7 +89,7 @@ export const Dashboard = ({ cerrarModal }) => {
                 </div>
 
                 {/* CONTENIDO */}
-                <div className="p-6 space-y-8">
+                <div className="p-4 md:p-6 space-y-6 md:space-y-8">
 
                     {/* TARJETAS DE KPIs */}
                     <div>
@@ -100,7 +100,7 @@ export const Dashboard = ({ cerrarModal }) => {
                         <div className="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-facilito-azul relative overflow-hidden">
                             <div className="relative z-10">
                                 <p className="text-gray-400 font-bold text-xs uppercase tracking-wider">Ventas de Hoy</p>
-                                <h3 className="text-3xl font-black text-facilito-negro mt-1">
+                                <h3 className="text-2xl sm:text-3xl font-black text-facilito-negro mt-1">
                                     ${datosProcesados.ventaTotal.toFixed(2)}
                                 </h3>
                                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
@@ -115,7 +115,7 @@ export const Dashboard = ({ cerrarModal }) => {
                         <div className="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-facilito-verde relative overflow-hidden">
                             <div className="relative z-10">
                                 <p className="text-gray-400 font-bold text-xs uppercase tracking-wider">Utilidad Neta</p>
-                                <h3 className="text-3xl font-black text-green-600 mt-1">
+                                <h3 className="text-2xl sm:text-3xl font-black text-green-600 mt-1">
                                     ${datosProcesados.utilidad.toFixed(2)}
                                 </h3>
                                 <div className="inline-block mt-2 px-2 py-0.5 bg-green-100 text-green-700 rounded-lg text-xs font-bold">
@@ -148,7 +148,7 @@ export const Dashboard = ({ cerrarModal }) => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                         {/* GRÁFICA (Ocupa 2/3) */}
-                        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm h-80 flex flex-col">
+                        <div className="lg:col-span-2 bg-white p-4 md:p-6 rounded-2xl shadow-sm h-56 sm:h-72 md:h-80 flex flex-col">
                             <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
                                 <Calendar size={16} className="text-gray-400" />
                                 Comportamiento Semanal

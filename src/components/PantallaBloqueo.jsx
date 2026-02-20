@@ -43,7 +43,7 @@ export const PantallaBloqueo = () => {
                 <div className="bg-white/10 p-4 rounded-full inline-block mb-4 shadow-lg">
                     <Lock size={40} />
                 </div>
-                <h1 className="text-3xl font-black tracking-tighter">ABARROTES FACILITO</h1>
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tighter">ABARROTES FACILITO</h1>
                 <p className="text-blue-200 mt-2 font-medium">Ingresa tu PIN de acceso</p>
             </div>
 
@@ -66,12 +66,12 @@ export const PantallaBloqueo = () => {
             </div>
 
             {/* TECLADO NUMÉRICO */}
-            <div className="grid grid-cols-3 gap-4 w-72">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-[16rem] sm:max-w-[18rem] px-4 sm:px-0">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                     <button
                         key={num}
                         onClick={() => manejarNumero(num.toString())}
-                        className="h-20 w-20 rounded-full bg-white/10 text-3xl font-bold hover:bg-white/30 active:scale-90 transition-all backdrop-blur-sm"
+                        className="aspect-square rounded-full bg-white/10 text-2xl sm:text-3xl font-bold hover:bg-white/30 active:scale-90 transition-all backdrop-blur-sm"
                     >
                         {num}
                     </button>
@@ -84,16 +84,16 @@ export const PantallaBloqueo = () => {
 
                 <button
                     onClick={() => manejarNumero("0")}
-                    className="h-20 w-20 rounded-full bg-white/10 text-3xl font-bold hover:bg-white/30 active:scale-90 transition-all backdrop-blur-sm"
+                    className="aspect-square rounded-full bg-white/10 text-2xl sm:text-3xl font-bold hover:bg-white/30 active:scale-90 transition-all backdrop-blur-sm"
                 >
                     0
                 </button>
 
                 <button
                     onClick={manejarBorrar}
-                    className="h-20 w-20 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all"
+                    className="aspect-square rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all"
                 >
-                    <Delete size={32} />
+                    <Delete size={28} />
                 </button>
             </div>
 
